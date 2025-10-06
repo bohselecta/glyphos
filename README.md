@@ -1,66 +1,91 @@
-# GlyphOS
+# 🎨 GlyphOS - Web-Native Operating System
 
-A web-native operating system for creative applications.
+A modern, AI-powered operating system built for the web with real-time collaboration capabilities.
 
-## Architecture
+## ✨ Features
 
-GlyphOS is built as a Progressive Web App (PWA) that provides a desktop-like environment in the browser. It uses iframe sandboxing for app isolation, Yjs CRDTs for real-time collaboration, and a federated app registry for distribution.
+- **🎨 Modern Interface** - Clean, iOS-inspired design with glassmorphism effects
+- **🚀 App Ecosystem** - 10 default apps including Notes, Canvas, AI Chat, and more
+- **🪟 Window Management** - Full window controls (close, minimize, maximize)
+- **🔍 Smart Launcher** - Search, categories, and grid-based app discovery
+- **📁 File Manager** - Intuitive folder navigation
+- **🏪 App Marketplace** - Featured apps and discovery platform
+- **⚡ Real-time Ready** - WebRTC infrastructure for collaboration
+- **🤖 AI Integration** - Framework for AI-powered features
 
-## Project Structure
+## 🚀 Live Demo
 
-```text
-glyphd/
-├── kernel/           # Core OS kernel (process management, IPC, capabilities)
-├── runtime/          # Shared services (storage, AI, collaboration, federation)
-├── desktop/          # Desktop environment (windows, dock, command palette)
-├── algorithms/       # Complex algorithms (trust, CRDT, layout, search, WebRTC)
-├── specs/            # Complete specification documents and implementations
-├── types/            # TypeScript type definitions
-├── src/              # Main application entry point
-└── apps/             # Example applications
-```
+**[Try GlyphOS Live →](https://glyphos-xxx.vercel.app)**
 
-## Complete Specifications
-
-The `specs/` directory contains comprehensive specification implementations:
-
-- **GAM Schema**: Complete Glyphd App Manifest specification with validation
-- **Storage API**: Comprehensive storage layer (KV, FS, Blob, Database)
-- **IPC Protocol**: Inter-app communication with message flows and permissions
-- **Registry System**: Registry format, verification, and trust chain validation
-- **CLI Tools**: Complete command reference and development workflow tools
-
-See [specs/README.md](specs/README.md) for detailed documentation.
-
-## Development
+## 🎯 Quick Start
 
 ```bash
+# Clone the repository
+git clone https://github.com/bohselecta/glyphos.git
+cd glyphos
+
 # Install dependencies
 npm install
 
 # Start development server
 npm run dev
 
-# Build for production
-npm run build
-
-# Run CLI tools
-npm run dev:cli
+# Open http://localhost:3000
 ```
 
-## Key Features
+## 🎮 How to Use
 
-- **App Sandboxing**: Each app runs in an isolated iframe with CSP enforcement
-- **Real-time Collaboration**: Yjs CRDTs with WebRTC P2P networking
-- **Federated Registry**: Decentralized app discovery and distribution
-- **Local-first Storage**: OPFS + IndexedDB with optional cloud sync
-- **Capability-based Security**: Apps request permissions explicitly
-- **Desktop Environment**: Window management, workspaces, command palette
-- **Advanced Algorithms**: Trust computation, CRDT resolution, window layouts, search ranking
-- **Complete Specifications**: Production-ready schemas, APIs, protocols, and CLI tools
-- **Type Safety**: Comprehensive TypeScript interfaces throughout
-- **Security**: Ed25519 signatures, permission validation, secure IPC
+1. **Apps Panel** (⊞) - Browse and launch applications
+2. **Files Panel** (📁) - Navigate folders and files
+3. **Market Panel** (🏪) - Discover and install new apps
+4. **Keyboard Shortcuts** - `Cmd/Ctrl + Space` for quick app access
+5. **Window Controls** - Close, minimize, maximize any window
 
-## License
+## 🛠️ Built With
 
-MIT
+- **Vite** - Fast build tool and dev server
+- **TypeScript** - Type-safe development
+- **WebRTC** - Real-time collaboration
+- **IndexedDB** - Browser storage
+- **OPFS** - File system access
+- **Yjs** - Collaborative data structures
+
+## 📱 Apps Included
+
+- **📝 Notes** - Rich text editor
+- **🎨 Canvas** - Creative drawing tool
+- **🤝 Live Collab** - Real-time collaboration
+- **🤖 AI Chat** - AI assistant
+- **📊 System Monitor** - Performance metrics
+- **⚡ Command Center** - App launcher
+- **🧠 Memory Graph** - Knowledge visualization
+- **🎬 Studio Player** - Media player
+- **🎯 Focus** - Productivity timer
+- **🏪 Market** - App discovery
+
+## 🚀 Deployment
+
+Ready to deploy to Vercel, Netlify, or any static hosting platform.
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions.
+
+## 🎨 Design Philosophy
+
+GlyphOS emphasizes:
+- **Simplicity** - Clean, uncluttered interface
+- **Collaboration** - Real-time sharing and editing
+- **AI Integration** - Smart, context-aware features
+- **Web-Native** - Built for the modern web
+- **Extensibility** - Easy to add new apps and features
+
+## 📄 License
+
+Apache 2.0 License - see [LICENSE](./LICENSE) for details.
+
+## 🤝 Contributing
+
+Contributions welcome! Please see the repository for development guidelines.
+
+---
+
+**Built with ❤️ for the future of web computing**
