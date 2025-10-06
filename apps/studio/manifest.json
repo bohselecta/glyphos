@@ -1,0 +1,79 @@
+{
+  "id": "com.glyphd.studio",
+  "version": "1.0.0",
+  
+  "manifest": {
+    "name": "Studio Player",
+    "description": "Unified media + generative viewer with AI enrichment",
+    "longDescription": "Play audio and video with real-time fractal visualizers. Use AI to generate captions, mood tags, and soundtrack suggestions. Broadcast playback to collaborative rooms.",
+    "categories": ["creative", "media", "ai"],
+    "tags": ["media", "visualizer", "ai", "webgpu", "collaborative"],
+    "icons": [
+      {
+        "src": "icon.svg",
+        "sizes": "any",
+        "type": "image/svg+xml"
+      }
+    ],
+    "display": "fullscreen",
+    "themeColor": "#f59e0b",
+    "backgroundColor": "#000000"
+  },
+  
+  "author": {
+    "name": "GlyphOS Team",
+    "pubkey": "rL3k8mPn5vQw9xYz2aBcDeFgHiJkLmNoPqRsTuVwXyZ=",
+    "registry": "https://apps.glyphd.com"
+  },
+  
+  "entry": {
+    "html": "index.html",
+    "integrity": "sha384-..."
+  },
+  
+  "capabilities": {
+    "storage": {
+      "blob": true,
+      "indexeddb": true,
+      "quota": "1GB"
+    },
+    "ai": {
+      "providers": ["openai"],
+      "maxTokens": 10000
+    },
+    "compute": {
+      "webgpu": true,
+      "workers": 2
+    },
+    "media": {
+      "camera": true,
+      "microphone": true,
+      "screen": true
+    }
+  },
+  
+  "collaboration": {
+    "crdt": "yjs",
+    "awareness": true,
+    "maxPeers": 50
+  },
+  
+  "extensions": {
+    "fileHandlers": [
+      {
+        "extensions": [".mp3", ".mp4", ".wav", ".ogg", ".webm"],
+        "accept": {
+          "audio/*": [".mp3", ".wav", ".ogg"],
+          "video/*": [".mp4", ".webm"]
+        }
+      }
+    ]
+  },
+  
+  "signature": {
+    "algorithm": "ed25519",
+    "publicKey": "rL3k8mPn5vQw9xYz2aBcDeFgHiJkLmNoPqRsTuVwXyZ=",
+    "signature": "...",
+    "timestamp": "2025-10-04T12:00:00Z"
+  }
+}

@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GlyphOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #333;
+      border-top: 4px solid #007acc;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Top Bar - Clean & Minimal */
+    .top-bar {
+      height: 48px;
+      background: rgba(15, 23, 42, 0.95);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1rem;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+    }
+
+    /* OS Brand */
+    .os-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: white;
+    }
+
+    .glyph-logo {
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .os-name {
+      font-size: 1rem;
+      letter-spacing: 0.02em;
+    }
+
+    /* Active App Title */
+    .active-app-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    /* System Controls */
+    .system-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-btn {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .status-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .status-btn .icon {
+      font-size: 1.25rem;
+    }
+
+    /* Status Dot (for realtime indicator) */
+    .status-dot {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      border: 2px solid rgba(15, 23, 42, 0.95);
+      display: none;
+    }
+
+    .status-btn.active .status-dot {
+      display: block;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.1); }
+    }
+
+    /* User Button */
+    .user-btn {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .user-btn:hover {
+      transform: scale(1.05);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .user-avatar {
+      font-size: 1.25rem;
+    }
+
+    /* Desktop */
+    .desktop {
+      position: fixed;
+      top: 48px;
+      left: 0;
+      right: 0;
+      bottom: 80px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .desktop.loaded {
+      display: block;
+    }
+
+    /* Dock */
+    .dock {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.1);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .dock-btn {
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-size: 1.5rem;
+    }
+
+    .dock-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    .dock-btn.active {
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .dock-divider {
+      width: 1px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.2);
+      margin: 0 0.5rem;
+    }
+
+    /* Windows */
+    .window {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.98);
+      -webkit-backdrop-filter: blur(40px);
+      backdrop-filter: blur(40px);
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+      z-index: 100;
+    }
+
+    .window-header {
+      height: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1rem;
+      cursor: move;
+    }
+
+    .window-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #1e293b;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .window-btn {
+      width: 24px;
+      height: 24px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .window-btn.close {
+      background: #ef4444;
+      color: white;
+    }
+
+    .window-btn.close:hover {
+      background: #dc2626;
+    }
+
+    .window-btn.minimize {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .window-btn.minimize:hover {
+      background: #d97706;
+    }
+
+    .window-btn.maximize {
+      background: #10b981;
+      color: white;
+    }
+
+    .window-btn.maximize:hover {
+      background: #059669;
+    }
+
+    .window-body {
+      height: calc(100% - 40px);
+      overflow: hidden;
+    }
+
+    .window-body iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Legacy App Launcher (will be removed) */
+    .app-launcher {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .app-launcher.active {
+      display: flex;
+    }
+
+    .app-grid {
+      background: rgba(26, 26, 26, 0.95);
+      border-radius: 20px;
+      padding: 2rem;
+      max-width: 800px;
+      max-height: 600px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1.5rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .app-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .app-icon:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: scale(1.05);
+    }
+
+    .app-icon:active {
+      transform: scale(0.95);
+    }
+
+    .app-icon-image {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .app-icon-name {
+      font-size: 12px;
+      text-align: center;
+      color: #e2e8f0;
+      font-weight: 500;
+    }
+
+    .launcher-header {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #e2e8f0;
+    }
+
+    .launcher-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .launcher-subtitle {
+      font-size: 14px;
+      color: #94a3b8;
+    }
+
+
+    /* Panel System */
+    .panel {
+      position: fixed;
+      top: 48px; /* Below top bar */
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      width: 90%;
+      max-width: 800px;
+      height: calc(100vh - 148px); /* Top bar + dock space */
+      background: rgba(255, 255, 255, 0.98);
+      -webkit-backdrop-filter: blur(40px);
+      backdrop-filter: blur(40px);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      display: none;
+      flex-direction: column;
+      opacity: 0;
+      z-index: 900;
+      overflow: hidden;
+    }
+
+    .panel.active {
+      display: flex;
+      animation: panelSlideIn 0.3s ease forwards;
+    }
+
+    @keyframes panelSlideIn {
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    .panel-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .search-input:focus {
+      background: white;
+      border-color: #a855f7;
+    }
+
+    /* App Grid in Panel */
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 1.5rem;
+      padding: 1rem 0;
+    }
+
+    .app-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      padding: 1rem;
+      border-radius: 12px;
+      transition: all 0.2s;
+    }
+
+    .app-item:hover {
+      background: rgba(168, 85, 247, 0.1);
+    }
+
+    .app-item-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+
+    .app-item-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #1e293b;
+      text-align: center;
+    }
+
+    /* App Categories */
+    .app-categories {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .category-chip {
+      padding: 0.5rem 1rem;
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 20px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .category-chip:hover {
+      background: rgba(168, 85, 247, 0.1);
+      border-color: #a855f7;
+    }
+
+    .category-chip.active {
+      background: #a855f7;
+      color: white;
+      border-color: #a855f7;
+    }
+
+    /* Folder Grid */
+    .folder-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 1.5rem;
+      padding: 1rem 0;
+    }
+
+    .folder-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      padding: 1rem;
+      border-radius: 12px;
+      transition: all 0.2s;
+    }
+
+    .folder-item:hover {
+      background: rgba(168, 85, 247, 0.1);
+    }
+
+    .folder-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+
+    .folder-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #1e293b;
+      text-align: center;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .breadcrumb-item {
+      padding: 0.5rem 1rem;
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .breadcrumb-item:hover {
+      background: rgba(168, 85, 247, 0.1);
+      border-color: #a855f7;
+    }
+
+    /* Market Section */
+    .market-section {
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 1rem;
+    }
+
+    .featured-apps {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .market-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .market-app {
+      background: white;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .market-app:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .market-app-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .market-app-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #1e293b;
+      margin-bottom: 0.25rem;
+    }
+
+    .market-app-desc {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-bottom: 0.75rem;
+    }
+
+    .market-app-install {
+      width: 100%;
+      padding: 0.5rem;
+      background: #a855f7;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .market-app-install:hover {
+      background: #9333ea;
+    }
+
+    /* Button Primary */
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: #a855f7;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: #9333ea;
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/main-BqqcNcsC.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div>Initializing GlyphOS...</div>
+    </div>
+
+    <!-- Top Status Bar -->
+    <div class="top-bar">
+      <!-- Left: OS Identity -->
+      <div class="os-brand">
+        <span class="glyph-logo">◬</span>
+        <span class="os-name">GlyphOS</span>
+      </div>
+      
+      <!-- Center: Active App Title (when window open) -->
+      <div class="active-app-title" id="activeAppTitle"></div>
+      
+      <!-- Right: System Features -->
+      <div class="system-controls">
+        <!-- Realtime Status (shows if connected to any rooms) -->
+        <button class="status-btn" id="realtimeStatus" title="Realtime">
+          <span class="status-dot"></span>
+          <span class="icon">⚡</span>
+        </button>
+        
+        <!-- AI Availability -->
+        <button class="status-btn" id="aiStatus" title="AI Ready">
+          <span class="icon">🤖</span>
+        </button>
+        
+        <!-- System Performance/Health -->
+        <button class="status-btn" id="systemStatus" title="System">
+          <span class="icon">📊</span>
+        </button>
+        
+        <!-- User Account/Auth -->
+        <button class="user-btn" id="userBtn" title="Account">
+          <span class="user-avatar">👤</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="desktop" id="desktop">
+      <!-- Windows Container -->
+      <div id="windows-container"></div>
+    </div>
+
+    <!-- Bottom Dock -->
+    <div class="dock">
+      <!-- App Launcher -->
+      <button class="dock-btn" id="appsBtn" title="Apps">
+        <span class="dock-icon">⊞</span>
+      </button>
+      
+      <!-- File Manager -->
+      <button class="dock-btn" id="filesBtn" title="Files">
+        <span class="dock-icon">📁</span>
+      </button>
+      
+      <!-- App Marketplace -->
+      <button class="dock-btn" id="marketBtn" title="Market">
+        <span class="dock-icon">🏪</span>
+      </button>
+      
+      <!-- Running Apps (dynamically added) -->
+      <div class="dock-divider"></div>
+      <div id="runningApps"></div>
+    </div>
+
+    <!-- The Three Panel Views - Enhanced -->
+    
+    <!-- 1. App Launcher Panel -->
+    <div class="panel" id="appsPanel">
+      <div class="panel-header">
+        <input type="text" class="search-input" placeholder="Search apps..." id="appSearch">
+      </div>
+      
+      <div class="panel-content">
+        <!-- Categories -->
+        <div class="app-categories">
+          <button class="category-chip active" data-category="all">All</button>
+          <button class="category-chip" data-category="productivity">Productivity</button>
+          <button class="category-chip" data-category="creative">Creative</button>
+          <button class="category-chip" data-category="ai">AI</button>
+          <button class="category-chip" data-category="tools">Tools</button>
+        </div>
+        
+        <!-- App Grid -->
+        <div class="app-grid" id="appGrid">
+          <!-- Apps inserted here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. File Manager Panel -->
+    <div class="panel" id="filesPanel">
+      <div class="panel-header">
+        <div class="breadcrumb" id="breadcrumb">
+          <button class="breadcrumb-item">🏠 Home</button>
+        </div>
+      </div>
+      
+      <div class="panel-content">
+        <!-- Quick Access Folders -->
+        <div class="folder-grid" id="folderGrid">
+          <div class="folder-item" data-path="desktop">
+            <div class="folder-icon">🖥️</div>
+            <div class="folder-name">Desktop</div>
+          </div>
+          <div class="folder-item" data-path="documents">
+            <div class="folder-icon">📄</div>
+            <div class="folder-name">Documents</div>
+          </div>
+          <div class="folder-item" data-path="pictures">
+            <div class="folder-icon">🖼️</div>
+            <div class="folder-name">Pictures</div>
+          </div>
+          <div class="folder-item" data-path="downloads">
+            <div class="folder-icon">⬇️</div>
+            <div class="folder-name">Downloads</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. App Marketplace Panel -->
+    <div class="panel" id="marketPanel">
+      <div class="panel-header">
+        <input type="text" class="search-input" placeholder="Search marketplace..." id="marketSearch">
+        <button class="btn-primary" id="publishBtn">
+          <span>📤</span>
+          <span>Publish App</span>
+        </button>
+      </div>
+      
+      <div class="panel-content">
+        <!-- Featured Section -->
+        <div class="market-section">
+          <h3 class="section-title">Featured</h3>
+          <div class="featured-apps" id="featuredApps">
+            <!-- Featured app cards -->
+          </div>
+        </div>
+        
+        <!-- Browse All -->
+        <div class="market-section">
+          <h3 class="section-title">Browse All Apps</h3>
+          <div class="market-grid" id="marketGrid">
+            <!-- Market app cards -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

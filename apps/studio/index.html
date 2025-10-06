@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Studio Player</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #000;
+      color: #fff;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    #visualizer {
+      flex: 1;
+      position: relative;
+    }
+    
+    #visualCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .top-bar {
+      padding: 2rem;
+      background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+      pointer-events: auto;
+    }
+    
+    .track-info {
+      margin-bottom: 1rem;
+    }
+    
+    .track-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    
+    .track-meta {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.875rem;
+      color: rgba(255,255,255,0.7);
+    }
+    
+    .ai-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    
+    .tag {
+      padding: 0.375rem 0.75rem;
+      background: rgba(245, 158, 11, 0.2);
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      border-radius: 1rem;
+      font-size: 0.75rem;
+    }
+    
+    .controls-bar {
+      padding: 2rem;
+      background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+      pointer-events: auto;
+    }
+    
+    .progress-container {
+      margin-bottom: 1rem;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: #f59e0b;
+      border-radius: 2px;
+      position: relative;
+    }
+    
+    .progress-thumb {
+      position: absolute;
+      right: -6px;
+      top: -4px;
+      width: 12px;
+      height: 12px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(0,0,0,0.5);
+    }
+    
+    .time-display {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.7);
+      margin-top: 0.25rem;
+    }
+    
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
+    
+    .control-btn {
+      width: 48px;
+      height: 48px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      transition: all 0.2s;
+    }
+    
+    .control-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: scale(1.1);
+    }
+    
+    .control-btn.play {
+      width: 64px;
+      height: 64px;
+      background: #f59e0b;
+      font-size: 1.5rem;
+    }
+    
+    .control-btn.play:hover {
+      background: #d97706;
+    }
+    
+    .secondary-controls {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      justify-content: center;
+    }
+    
+    .btn {
+      padding: 0.5rem 1rem;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 0.375rem;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+    
+    .btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .library-panel {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 400px;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(20px);
+      transition: right 0.3s;
+      z-index: 100;
+      overflow-y: auto;
+      padding: 2rem;
+    }
+    
+    .library-panel.active {
+      right: 0;
+    }
+    
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    
+    .panel-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+    }
+    
+    .media-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .media-item {
+      padding: 1rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .media-item:hover {
+      background: rgba(255,255,255,0.1);
+      transform: translateX(4px);
+    }
+    
+    .media-item.active {
+      background: rgba(245, 158, 11, 0.2);
+      border: 1px solid rgba(245, 158, 11, 0.5);
+    }
+    
+    .media-name {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+    
+    .media-duration {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.5);
+    }
+    
+    .upload-zone {
+      border: 2px dashed rgba(255,255,255,0.3);
+      border-radius: 0.5rem;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 2rem;
+    }
+    
+    .upload-zone:hover {
+      border-color: #f59e0b;
+      background: rgba(245, 158, 11, 0.05);
+    }
+    
+    .upload-zone.dragover {
+      border-color: #f59e0b;
+      background: rgba(245, 158, 11, 0.1);
+    }
+    
+    input[type="file"] {
+      display: none;
+    }
+    
+    .visualizer-select {
+      position: absolute;
+      top: 2rem;
+      right: 2rem;
+      z-index: 10;
+      pointer-events: auto;
+    }
+    
+    select {
+      padding: 0.5rem 1rem;
+      background: rgba(0,0,0,0.8);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 0.375rem;
+      color: #fff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="visualizer">
+    <canvas id="visualCanvas"></canvas>
+    
+    <div class="overlay">
+      <div class="top-bar">
+        <div class="track-info">
+          <div class="track-title" id="trackTitle">No track loaded</div>
+          <div class="track-meta">
+            <span id="trackArtist"></span>
+            <span id="trackDuration"></span>
+          </div>
+        </div>
+        <div class="ai-tags" id="aiTags"></div>
+      </div>
+      
+      <div class="controls-bar">
+        <div class="progress-container">
+          <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill">
+              <div class="progress-thumb"></div>
+            </div>
+          </div>
+          <div class="time-display">
+            <span id="currentTime">0:00</span>
+            <span id="totalTime">0:00</span>
+          </div>
+        </div>
+        
+        <div class="controls">
+          <button class="control-btn" id="prevBtn">⏮</button>
+          <button class="control-btn play" id="playBtn">▶</button>
+          <button class="control-btn" id="nextBtn">⏭</button>
+          <button class="control-btn" id="volumeBtn">🔊</button>
+        </div>
+        
+        <div class="secondary-controls">
+          <button class="btn" id="libraryBtn">📚 Library</button>
+          <button class="btn" id="aiAnalyzeBtn">🤖 AI Analyze</button>
+          <button class="btn" id="broadcastBtn">📡 Broadcast</button>
+          <select class="btn" id="visualizerSelect">
+            <option value="bars">Bars</option>
+            <option value="wave">Wave</option>
+            <option value="circular">Circular</option>
+            <option value="fractal">Fractal</option>
+            <option value="particles">Particles</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="library-panel" id="libraryPanel">
+    <div class="panel-header">
+      <div class="panel-title">Library</div>
+      <button class="close-btn" id="closeLibrary">×</button>
+    </div>
+    
+    <div class="upload-zone" id="uploadZone">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">🎵</div>
+      <div>Drop media files here or click to browse</div>
+      <input type="file" id="fileInput" accept="audio/*,video/*" multiple>
+    </div>
+    
+    <div class="media-list" id="mediaList"></div>
+  </div>
+  
+  <audio id="audio"></audio>
+
+  <script type="module">
+    // Studio Player - GlyphOS
+    
+    const canvas = document.getElementById('visualCanvas')
+    const ctx = canvas.getContext('2d')
+    const audio = document.getElementById('audio')
+    
+    let audioContext
+    let analyser
+    let dataArray
+    let bufferLength
+    let currentTrack = null
+    let playlist = []
+    let isPlaying = false
+    let currentVisualizer = 'bars'
+    
+    // Resize canvas
+    function resizeCanvas() {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+    
+    resizeCanvas()
+    window.addEventListener('resize', resizeCanvas)
+    
+    // Initialize audio context
+    function initAudio() {
+      if (audioContext) return
+      
+      audioContext = new (window.AudioContext || window.webkitAudioContext)()
+      analyser = audioContext.createAnalyser()
+      const source = audioContext.createMediaElementSource(audio)
+      source.connect(analyser)
+      analyser.connect(audioContext.destination)
+      
+      analyser.fftSize = 256
+      bufferLength = analyser.frequencyBinCount
+      dataArray = new Uint8Array(bufferLength)
+    }
+    
+    // Load playlist from storage
+    async function loadPlaylist() {
+      const stored = await OS.storage.kv.get('studio-playlist')
+      if (stored) {
+        playlist = stored
+        renderPlaylist()
+      }
+    }
+    
+    // Save playlist to storage
+    async function savePlaylist() {
+      await OS.storage.kv.set('studio-playlist', playlist)
+    }
+    
+    // Add track to playlist
+    async function addTrack(file) {
+      const url = await OS.storage.blob.put(`track-${Date.now()}`, file, {
+        type: file.type
+      })
+      
+      const track = {
+        id: Date.now(),
+        name: file.name,
+        type: file.type,
+        duration: 0,
+        url: url.url,
+        aiTags: []
+      }
+      
+      playlist.push(track)
+      await savePlaylist()
+      renderPlaylist()
+      
+      return track
+    }
+    
+    // Play track
+    async function playTrack(track) {
+      if (!track) return
+      
+      initAudio()
+      
+      currentTrack = track
+      audio.src = track.url
+      
+      await audio.play()
+      isPlaying = true
+      
+      document.getElementById('playBtn').textContent = '⏸'
+      document.getElementById('trackTitle').textContent = track.name
+      
+      // Start visualization
+      visualize()
+    }
+    
+    // Visualizers
+    const visualizers = {
+      bars(data) {
+        const barWidth = canvas.width / bufferLength * 2.5
+        let x = 0
+        
+        for (let i = 0; i < bufferLength; i++) {
+          const barHeight = (data[i] / 255) * canvas.height * 0.8
+          
+          const hue = (i / bufferLength) * 360
+          ctx.fillStyle = `hsl(${hue}, 70%, 50%)`
+          
+          ctx.fillRect(
+            x,
+            canvas.height - barHeight,
+            barWidth,
+            barHeight
+          )
+          
+          x += barWidth + 1
+        }
+      },
+      
+      wave(data) {
+        ctx.lineWidth = 3
+        ctx.strokeStyle = '#f59e0b'
+        ctx.beginPath()
+        
+        const sliceWidth = canvas.width / bufferLength
+        let x = 0
+        
+        for (let i = 0; i < bufferLength; i++) {
+          const v = data[i] / 128.0
+          const y = v * canvas.height / 2
+          
+          if (i === 0) {
+            ctx.moveTo(x, y)
+          } else {
+            ctx.lineTo(x, y)
+          }
+          
+          x += sliceWidth
+        }
+        
+        ctx.lineTo(canvas.width, canvas.height / 2)
+        ctx.stroke()
+      },
+      
+      circular(data) {
+        const centerX = canvas.width / 2
+        const centerY = canvas.height / 2
+        const radius = Math.min(centerX, centerY) * 0.5
+        
+        for (let i = 0; i < bufferLength; i++) {
+          const angle = (i / bufferLength) * Math.PI * 2
+          const amp = (data[i] / 255) * radius
+          
+          const x1 = centerX + Math.cos(angle) * radius
+          const y1 = centerY + Math.sin(angle) * radius
+          const x2 = centerX + Math.cos(angle) * (radius + amp)
+          const y2 = centerY + Math.sin(angle) * (radius + amp)
+          
+          const hue = (i / bufferLength) * 360
+          ctx.strokeStyle = `hsl(${hue}, 70%, 50%)`
+          ctx.lineWidth = 2
+          
+          ctx.beginPath()
+          ctx.moveTo(x1, y1)
+          ctx.lineTo(x2, y2)
+          ctx.stroke()
+        }
+      },
+      
+      fractal(data) {
+        const centerX = canvas.width / 2
+        const centerY = canvas.height / 2
+        
+        for (let i = 0; i < bufferLength; i++) {
+          const angle = (i / bufferLength) * Math.PI * 2
+          const amp = (data[i] / 255) * 200
+          
+          // Draw fractal branches
+          let x = centerX
+          let y = centerY
+          
+          for (let j = 0; j < 3; j++) {
+            const branchAngle = angle + Math.sin(Date.now() / 1000 + j) * 0.5
+            const branchLen = amp * (1 - j * 0.3)
+            
+            const x2 = x + Math.cos(branchAngle) * branchLen
+            const y2 = y + Math.sin(branchAngle) * branchLen
+            
+            const hue = (i / bufferLength + j * 0.2) * 360
+            ctx.strokeStyle = `hsla(${hue}, 70%, 50%, ${0.8 - j * 0.2})`
+            ctx.lineWidth = 3 - j
+            
+            ctx.beginPath()
+            ctx.moveTo(x, y)
+            ctx.lineTo(x2, y2)
+            ctx.stroke()
+            
+            x = x2
+            y = y2
+          }
+        }
+      },
+      
+      particles(data) {
+        if (!this.particles) {
+          this.particles = []
+          for (let i = 0; i < 100; i++) {
+            this.particles.push({
+              x: Math.random() * canvas.width,
+              y: Math.random() * canvas.height,
+              vx: (Math.random() - 0.5) * 2,
+              vy: (Math.random() - 0.5) * 2,
+              hue: Math.random() * 360
+            })
+          }
+        }
+        
+        const avgFreq = data.reduce((a, b) => a + b, 0) / data.length
+        const intensity = avgFreq / 255
+        
+        this.particles.forEach((p, i) => {
+          const freq = data[i % bufferLength] / 255
+          
+          p.vx += (Math.random() - 0.5) * intensity
+          p.vy += (Math.random() - 0.5) * intensity
+          
+          p.vx *= 0.98
+          p.vy *= 0.98
+          
+          p.x += p.vx
+          p.y += p.vy
+          
+          if (p.x < 0 || p.x > canvas.width) p.vx *= -1
+          if (p.y < 0 || p.y > canvas.height) p.vy *= -1
+          
+          p.x = Math.max(0, Math.min(canvas.width, p.x))
+          p.y = Math.max(0, Math.min(canvas.height, p.y))
+          
+          const size = 5 + freq * 20
+          ctx.fillStyle = `hsla(${p.hue}, 70%, 50%, ${freq})`
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, size, 0, Math.PI * 2)
+          ctx.fill()
+        })
+      }
+    }
+    
+    // Visualization loop
+    function visualize() {
+      if (!isPlaying) return
+      
+      requestAnimationFrame(visualize)
+      
+      analyser.getByteFrequencyData(dataArray)
+      
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      
+      visualizers[currentVisualizer](dataArray)
+    }
+    
+    // Update progress
+    audio.addEventListener('timeupdate', () => {
+      const progress = (audio.currentTime / audio.duration) * 100
+      document.getElementById('progressFill').style.width = progress + '%'
+      
+      document.getElementById('currentTime').textContent = formatTime(audio.currentTime)
+      document.getElementById('totalTime').textContent = formatTime(audio.duration)
+    })
+    
+    // Format time
+    function formatTime(seconds) {
+      if (isNaN(seconds)) return '0:00'
+      const mins = Math.floor(seconds / 60)
+      const secs = Math.floor(seconds % 60)
+      return `${mins}:${secs.toString().padStart(2, '0')}`
+    }
+    
+    // Render playlist
+    function renderPlaylist() {
+      const list = document.getElementById('mediaList')
+      list.innerHTML = playlist.map(track => `
+        <div class="media-item ${currentTrack?.id === track.id ? 'active' : ''}" data-track-id="${track.id}">
+          <div class="media-name">${track.name}</div>
+          <div class="media-duration">${formatTime(track.duration)}</div>
+        </div>
+      `).join('')
+      
+      list.querySelectorAll('.media-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const track = playlist.find(t => t.id == item.dataset.trackId)
+          playTrack(track)
+          renderPlaylist()
+        })
+      })
+    }
+    
+    // File upload
+    const uploadZone = document.getElementById('uploadZone')
+    const fileInput = document.getElementById('fileInput')
+    
+    uploadZone.addEventListener('click', () => fileInput.click())
+    
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault()
+      uploadZone.classList.add('dragover')
+    })
+    
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('dragover')
+    })
+    
+    uploadZone.addEventListener('drop', async (e) => {
+      e.preventDefault()
+      uploadZone.classList.remove('dragover')
+      
+      const files = Array.from(e.dataTransfer.files)
+      for (const file of files) {
+        await addTrack(file)
+      }
+    })
+    
+    fileInput.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files)
+      for (const file of files) {
+        await addTrack(file)
+      }
+    })
+    
+    // Controls
+    document.getElementById('playBtn').addEventListener('click', () => {
+      if (isPlaying) {
+        audio.pause()
+        isPlaying = false
+        document.getElementById('playBtn').textContent = '▶'
+      } else {
+        if (currentTrack) {
+          audio.play()
+          isPlaying = true
+          document.getElementById('playBtn').textContent = '⏸'
+          visualize()
+        } else if (playlist.length > 0) {
+          playTrack(playlist[0])
+        }
+      }
+    })
+    
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      const index = playlist.findIndex(t => t.id === currentTrack?.id)
+      if (index < playlist.length - 1) {
+        playTrack(playlist[index + 1])
+      }
+    })
+    
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      const index = playlist.findIndex(t => t.id === currentTrack?.id)
+      if (index > 0) {
+        playTrack(playlist[index - 1])
+      }
+    })
+    
+    document.getElementById('libraryBtn').addEventListener('click', () => {
+      document.getElementById('libraryPanel').classList.toggle('active')
+    })
+    
+    document.getElementById('closeLibrary').addEventListener('click', () => {
+      document.getElementById('libraryPanel').classList.remove('active')
+    })
+    
+    document.getElementById('visualizerSelect').addEventListener('change', (e) => {
+      currentVisualizer = e.target.value
+    })
+    
+    // AI Analysis
+    document.getElementById('aiAnalyzeBtn').addEventListener('click', async () => {
+      if (!currentTrack) return
+      
+      try {
+        const prompt = `
+          Analyze this audio track and provide:
+          1. Mood/vibe tags (3-5 words)
+          2. Genre classification
+          3. Suggested use cases
+          
+          Track name: ${currentTrack.name}
+        `
+        
+        const response = await OS.ai.complete(prompt, {
+          provider: 'openai',
+          maxTokens: 200
+        })
+        
+        // Extract tags from response (simplified)
+        const tags = response.match(/\b\w+\b/g).slice(0, 5)
+        
+        currentTrack.aiTags = tags
+        await savePlaylist()
+        
+        const tagsEl = document.getElementById('aiTags')
+        tagsEl.innerHTML = tags.map(tag => `<span class="tag">${tag}</span>`).join('')
+        
+      } catch (error) {
+        console.error('AI analysis failed:', error)
+      }
+    })
+    
+    // Initialize
+    loadPlaylist()
+  </script>
+</body>
+</html>

@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .header {
+      padding: 1.5rem;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+    
+    .title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .search-container {
+      position: relative;
+      width: 400px;
+    }
+    
+    .search-box {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 3rem;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      color: #e2e8f0;
+      font-size: 1rem;
+    }
+    
+    .search-box:focus {
+      outline: none;
+      border-color: #06b6d4;
+    }
+    
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #64748b;
+    }
+    
+    .header-right {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    .btn {
+      padding: 0.75rem 1.5rem;
+      background: #334155;
+      border: none;
+      border-radius: 0.375rem;
+      color: #e2e8f0;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    .btn:hover {
+      background: #475569;
+    }
+    
+    .btn.primary {
+      background: #06b6d4;
+    }
+    
+    .btn.primary:hover {
+      background: #0891b2;
+    }
+    
+    .content {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    
+    .sidebar {
+      width: 250px;
+      background: #1e293b;
+      border-right: 1px solid #334155;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+    
+    .sidebar-section {
+      margin-bottom: 2rem;
+    }
+    
+    .section-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      margin-bottom: 1rem;
+    }
+    
+    .registry-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .registry-item {
+      padding: 0.75rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 0.375rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .registry-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+    
+    .registry-item.active {
+      background: #06b6d4;
+      color: #0f172a;
+    }
+    
+    .registry-badge {
+      padding: 0.25rem 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+    }
+    
+    .category-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .category-item {
+      padding: 0.5rem 0.75rem;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      text-align: left;
+      border-radius: 0.375rem;
+      transition: all 0.2s;
+    }
+    
+    .category-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #e2e8f0;
+    }
+    
+    .category-item.active {
+      background: rgba(6, 182, 212, 0.1);
+      color: #06b6d4;
+    }
+    
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem;
+    }
+    
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .app-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    
+    .app-card:hover {
+      border-color: #06b6d4;
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    }
+    
+    .app-header {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .app-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+    
+    .app-info {
+      flex: 1;
+    }
+    
+    .app-name {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    
+    .app-author {
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+    
+    .app-description {
+      color: #94a3b8;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .app-meta {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+    
+    .app-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .tag {
+      padding: 0.25rem 0.75rem;
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      border-radius: 1rem;
+      font-size: 0.75rem;
+      color: #06b6d4;
+    }
+    
+    .app-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .app-btn {
+      flex: 1;
+      padding: 0.75rem;
+      background: #06b6d4;
+      border: none;
+      border-radius: 0.375rem;
+      color: #0f172a;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    
+    .app-btn:hover {
+      background: #0891b2;
+    }
+    
+    .app-btn.installed {
+      background: #334155;
+      color: #e2e8f0;
+    }
+    
+    .app-btn.installed:hover {
+      background: #ef4444;
+      color: white;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 4rem;
+      color: #64748b;
+    }
+    
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #06b6d4;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 4rem;
+      color: #64748b;
+    }
+    
+    .empty-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+    
+    .stats-bar {
+      padding: 1rem 1.5rem;
+      background: rgba(6, 182, 212, 0.1);
+      border-bottom: 1px solid rgba(6, 182, 212, 0.3);
+      display: flex;
+      gap: 2rem;
+      font-size: 0.875rem;
+    }
+    
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .stat-value {
+      color: #06b6d4;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <div class="title">
+        <span>🏪</span>
+        <span>Market</span>
+      </div>
+      
+      <div class="search-container">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          class="search-box" 
+          id="searchBox"
+          placeholder="Search apps..."
+        >
+      </div>
+    </div>
+    
+    <div class="header-right">
+      <button class="btn" id="syncBtn">🔄 Sync</button>
+      <button class="btn" id="registriesBtn">📡 Registries</button>
+      <button class="btn primary" id="publishBtn">📤 Publish</button>
+    </div>
+  </div>
+  
+  <div class="stats-bar">
+    <div class="stat">
+      <span>Apps:</span>
+      <span class="stat-value" id="totalApps">0</span>
+    </div>
+    <div class="stat">
+      <span>Installed:</span>
+      <span class="stat-value" id="installedApps">0</span>
+    </div>
+    <div class="stat">
+      <span>Registries:</span>
+      <span class="stat-value" id="registryCount">0</span>
+    </div>
+    <div class="stat">
+      <span>Last Sync:</span>
+      <span class="stat-value" id="lastSync">Never</span>
+    </div>
+  </div>
+  
+  <div class="content">
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="section-title">Registries</div>
+        <div class="registry-list" id="registryList"></div>
+      </div>
+      
+      <div class="sidebar-section">
+        <div class="section-title">Categories</div>
+        <div class="category-list">
+          <button class="category-item active" data-category="all">All Apps</button>
+          <button class="category-item" data-category="productivity">Productivity</button>
+          <button class="category-item" data-category="creative">Creative</button>
+          <button class="category-item" data-category="ai">AI</button>
+          <button class="category-item" data-category="utility">Utility</button>
+          <button class="category-item" data-category="social">Social</button>
+          <button class="category-item" data-category="tools">Tools</button>
+          <button class="category-item" data-category="experimental">Experimental</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="main">
+      <div class="app-grid" id="appGrid"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Market - GlyphOS
+    
+    let apps = []
+    let registries = []
+    let installedApps = new Set()
+    let currentRegistry = 'all'
+    let currentCategory = 'all'
+    let searchQuery = ''
+    
+    // Mock registry data (in production, would fetch from actual registries)
+    const mockRegistries = [
+      {
+        url: 'https://apps.glyphd.com',
+        name: 'Official',
+        type: 'official',
+        appCount: 12
+      },
+      {
+        url: 'https://community.glyphd.com',
+        name: 'Community',
+        type: 'community',
+        appCount: 24
+      }
+    ]
+    
+    // Mock apps (in production, would fetch from registries)
+    const mockApps = [
+      {
+        id: 'com.glyphd.notes',
+        name: 'Notes',
+        author: 'GlyphOS Team',
+        description: 'Simple, fast note-taking with automatic saving',
+        icon: '📝',
+        categories: ['productivity', 'utility'],
+        tags: ['notes', 'writing', 'productivity'],
+        version: '1.0.0',
+        installs: 15234,
+        rating: 4.8,
+        registry: 'https://apps.glyphd.com'
+      },
+      {
+        id: 'com.glyphd.canvas',
+        name: 'Glyph Canvas',
+        author: 'GlyphOS Team',
+        description: 'Creative drawing with procedural brushes and effects',
+        icon: '🎨',
+        categories: ['creative', 'tools'],
+        tags: ['drawing', 'art', 'creative'],
+        version: '1.0.0',
+        installs: 8921,
+        rating: 4.7,
+        registry: 'https://apps.glyphd.com'
+      },
+      {
+        id: 'com.glyphd.aichat',
+        name: 'AI Chat',
+        author: 'GlyphOS Team',
+        description: 'Chat with AI using your own API keys',
+        icon: '🤖',
+        categories: ['ai', 'productivity'],
+        tags: ['ai', 'chat', 'assistant'],
+        version: '1.0.0',
+        installs: 12456,
+        rating: 4.9,
+        registry: 'https://apps.glyphd.com'
+      },
+      {
+        id: 'com.glyphd.collab',
+        name: 'Live Collab',
+        author: 'GlyphOS Team',
+        description: 'Real-time collaborative whiteboard with presence',
+        icon: '👥',
+        categories: ['productivity', 'social'],
+        tags: ['collaboration', 'realtime', 'whiteboard'],
+        version: '1.0.0',
+        installs: 6789,
+        rating: 4.6,
+        registry: 'https://apps.glyphd.com'
+      },
+      {
+        id: 'com.glyphd.memory',
+        name: 'Memory Graph',
+        author: 'GlyphOS Team',
+        description: 'Visual knowledge graph connecting all your data',
+        icon: '🧠',
+        categories: ['productivity', 'ai', 'tools'],
+        tags: ['knowledge-graph', 'ai', 'semantic'],
+        version: '1.0.0',
+        installs: 4532,
+        rating: 4.8,
+        registry: 'https://apps.glyphd.com'
+      },
+      {
+        id: 'com.glyphd.studio',
+        name: 'Studio Player',
+        author: 'GlyphOS Team',
+        description: 'Unified media player with generative visualizers',
+        icon: '🎵',
+        categories: ['creative', 'ai'],
+        tags: ['media', 'visualizer', 'music'],
+        version: '1.0.0',
+        installs: 7234,
+        rating: 4.7,
+        registry: 'https://apps.glyphd.com'
+      },
+      {
+        id: 'com.glyphd.focus',
+        name: 'Focus',
+        author: 'GlyphOS Team',
+        description: 'Temporal flow management with productivity rituals',
+        icon: '⏱️',
+        categories: ['productivity', 'utility'],
+        tags: ['pomodoro', 'focus', 'productivity'],
+        version: '1.0.0',
+        installs: 9876,
+        rating: 4.9,
+        registry: 'https://apps.glyphd.com'
+      },
+      {
+        id: 'com.glyphd.monitor',
+        name: 'System Monitor',
+        author: 'GlyphOS Team',
+        description: 'Monitor system resources and running apps',
+        icon: '📊',
+        categories: ['utility', 'tools'],
+        tags: ['system', 'monitoring', 'performance'],
+        version: '1.0.0',
+        installs: 5432,
+        rating: 4.5,
+        registry: 'https://apps.glyphd.com'
+      },
+      {
+        id: 'com.glyphd.command',
+        name: 'Command Center',
+        author: 'GlyphOS Team',
+        description: 'Universal app launcher and workflow automation',
+        icon: '⚡',
+        categories: ['utility', 'productivity'],
+        tags: ['launcher', 'automation', 'workflows'],
+        version: '1.0.0',
+        installs: 6543,
+        rating: 4.8,
+        registry: 'https://apps.glyphd.com'
+      }
+    ]
+    
+    // Load installed apps
+    async function loadInstalledApps() {
+      const installed = await OS.storage.kv.get('installed-apps') || []
+      installedApps = new Set(installed)
+    }
+    
+    // Save installed apps
+    async function saveInstalledApps() {
+      await OS.storage.kv.set('installed-apps', Array.from(installedApps))
+    }
+    
+    // Sync from registries
+    async function syncRegistries() {
+      document.getElementById('syncBtn').textContent = '⏳ Syncing...'
+      
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // In production, would fetch from actual registries
+      apps = mockApps
+      registries = mockRegistries
+      
+      await OS.storage.kv.set('last-sync', Date.now())
+      
+      updateStats()
+      renderRegistries()
+      renderApps()
+      
+      document.getElementById('syncBtn').textContent = '🔄 Sync'
+    }
+    
+    // Update stats
+    function updateStats() {
+      document.getElementById('totalApps').textContent = apps.length
+      document.getElementById('installedApps').textContent = installedApps.size
+      document.getElementById('registryCount').textContent = registries.length
+      
+      const lastSync = localStorage.getItem('last-sync')
+      if (lastSync) {
+        const date = new Date(parseInt(lastSync))
+        document.getElementById('lastSync').textContent = date.toLocaleTimeString()
+      }
+    }
+    
+    // Render registries
+    function renderRegistries() {
+      const list = document.getElementById('registryList')
+      list.innerHTML = `
+        <div class="registry-item active" data-registry="all">
+          <span>All Registries</span>
+          <span class="registry-badge">${apps.length}</span>
+        </div>
+        ${registries.map(reg => `
+          <div class="registry-item" data-registry="${reg.url}">
+            <span>${reg.name}</span>
+            <span class="registry-badge">${reg.appCount}</span>
+          </div>
+        `).join('')}
+      `
+      
+      list.querySelectorAll('.registry-item').forEach(item => {
+        item.addEventListener('click', () => {
+          list.querySelectorAll('.registry-item').forEach(i => i.classList.remove('active'))
+          item.classList.add('active')
+          currentRegistry = item.dataset.registry
+          renderApps()
+        })
+      })
+    }
+    
+    // Render apps
+    function renderApps() {
+      const grid = document.getElementById('appGrid')
+      
+      // Filter apps
+      let filtered = apps
+      
+      if (currentRegistry !== 'all') {
+        filtered = filtered.filter(app => app.registry === currentRegistry)
+      }
+      
+      if (currentCategory !== 'all') {
+        filtered = filtered.filter(app => app.categories.includes(currentCategory))
+      }
+      
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase()
+        filtered = filtered.filter(app =>
+          app.name.toLowerCase().includes(query) ||
+          app.description.toLowerCase().includes(query) ||
+          app.tags.some(tag => tag.toLowerCase().includes(query))
+        )
+      }
+      
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📦</div>
+            <div>No apps found</div>
+          </div>
+        `
+        return
+      }
+      
+      grid.innerHTML = filtered.map(app => `
+        <div class="app-card">
+          <div class="app-header">
+            <div class="app-icon">${app.icon}</div>
+            <div class="app-info">
+              <div class="app-name">${app.name}</div>
+              <div class="app-author">by ${app.author}</div>
+            </div>
+          </div>
+          
+          <div class="app-description">${app.description}</div>
+          
+          <div class="app-meta">
+            <span>⭐ ${app.rating}/5</span>
+            <span>📥 ${formatNumber(app.installs)}</span>
+            <span>v${app.version}</span>
+          </div>
+          
+          <div class="app-tags">
+            ${app.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+          </div>
+          
+          <div class="app-actions">
+            <button 
+              class="app-btn ${installedApps.has(app.id) ? 'installed' : ''}"
+              data-app-id="${app.id}"
+            >
+              ${installedApps.has(app.id) ? 'Uninstall' : 'Install'}
+            </button>
+          </div>
+        </div>
+      `).join('')
+      
+      // Add event listeners
+      grid.querySelectorAll('.app-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const appId = btn.dataset.appId
+          
+          if (installedApps.has(appId)) {
+            await uninstallApp(appId)
+            installedApps.delete(appId)
+            btn.textContent = 'Install'
+            btn.classList.remove('installed')
+          } else {
+            await installApp(appId)
+            installedApps.add(appId)
+            btn.textContent = 'Uninstall'
+            btn.classList.add('installed')
+          }
+          
+          await saveInstalledApps()
+          updateStats()
+        })
+      })
+    }
+    
+    // Install app
+    async function installApp(appId) {
+      const app = apps.find(a => a.id === appId)
+      
+      // In production, would:
+      // 1. Fetch manifest
+      // 2. Verify signature
+      // 3. Download assets
+      // 4. Register with OS
+      
+      console.log('Installing:', app.name)
+      
+      // Simulate install delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Show notification
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('App Installed', {
+          body: `${app.name} is ready to use`,
+          icon: '/icon.svg'
+        })
+      }
+    }
+    
+    // Uninstall app
+    async function uninstallApp(appId) {
+      const app = apps.find(a => a.id === appId)
+      
+      console.log('Uninstalling:', app.name)
+      
+      await new Promise(resolve => setTimeout(resolve, 500))
+    }
+    
+    // Format number
+    function formatNumber(num) {
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
+      return num.toString()
+    }
+    
+    // Category selection
+    document.querySelectorAll('.category-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.category-item').forEach(i => i.classList.remove('active'))
+        item.classList.add('active')
+        currentCategory = item.dataset.category
+        renderApps()
+      })
+    })
+    
+    // Search
+    document.getElementById('searchBox').addEventListener('input', (e) => {
+      searchQuery = e.target.value
+      renderApps()
+    })
+    
+    // Sync button
+    document.getElementById('syncBtn').addEventListener('click', syncRegistries)
+    
+    // Initialize
+    async function init() {
+      await loadInstalledApps()
+      await syncRegistries()
+      
+      // Request notification permission
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission()
+      }
+    }
+    
+    init()
+  </script>
+</body>
+</html>

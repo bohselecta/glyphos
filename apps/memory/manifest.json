@@ -1,0 +1,91 @@
+{
+  "id": "com.glyphd.memory",
+  "version": "1.0.0",
+  
+  "manifest": {
+    "name": "Memory Graph",
+    "description": "Your knowledge, linked. Visual graph of all entities across apps.",
+    "longDescription": "Automatically discovers and connects your notes, canvases, chat threads, and collaborative sessions into a semantic knowledge graph. Use AI to find patterns and relationships.",
+    "categories": ["productivity", "ai", "tools"],
+    "tags": ["knowledge-graph", "semantic", "ai", "visualization"],
+    "icons": [
+      {
+        "src": "icon.svg",
+        "sizes": "any",
+        "type": "image/svg+xml"
+      }
+    ],
+    "display": "standalone",
+    "themeColor": "#ec4899",
+    "backgroundColor": "#0f172a"
+  },
+  
+  "author": {
+    "name": "GlyphOS Team",
+    "pubkey": "rL3k8mPn5vQw9xYz2aBcDeFgHiJkLmNoPqRsTuVwXyZ=",
+    "registry": "https://apps.glyphd.com"
+  },
+  
+  "entry": {
+    "html": "index.html",
+    "integrity": "sha384-..."
+  },
+  
+  "capabilities": {
+    "storage": {
+      "indexeddb": true,
+      "blob": true,
+      "quota": "100MB"
+    },
+    "ai": {
+      "providers": ["openai", "anthropic"],
+      "maxTokens": 50000
+    },
+    "ipc": {
+      "consume": ["*"],
+      "expose": [
+        {
+          "name": "addNode",
+          "params": [
+            {"name": "type", "type": "string"},
+            {"name": "data", "type": "object"}
+          ],
+          "returns": "string",
+          "description": "Add a node to the graph"
+        },
+        {
+          "name": "query",
+          "params": [
+            {"name": "filter", "type": "object", "optional": true}
+          ],
+          "returns": "array",
+          "description": "Query nodes in the graph"
+        }
+      ]
+    }
+  },
+  
+  "collaboration": {
+    "crdt": "yjs",
+    "awareness": true,
+    "maxPeers": 10
+  },
+  
+  "extensions": {
+    "fileHandlers": [
+      {
+        "extensions": [".glyphgraph"],
+        "accept": {
+          "application/x-glyph-graph": [".glyphgraph"]
+        }
+      }
+    ]
+  },
+  
+  "signature": {
+    "algorithm": "ed25519",
+    "publicKey": "rL3k8mPn5vQw9xYz2aBcDeFgHiJkLmNoPqRsTuVwXyZ=",
+    "signature": "...",
+    "timestamp": "2025-10-04T12:00:00Z"
+  }
+}

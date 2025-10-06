@@ -1,0 +1,40 @@
+{
+  "id": "com.glyphd.monitor",
+  "version": "1.0.0",
+  
+  "manifest": {
+    "name": "System Monitor",
+    "description": "Monitor system resources and running apps",
+    "categories": ["utility", "tools"],
+    "icons": [
+      {
+        "src": "icon.svg",
+        "sizes": "any",
+        "type": "image/svg+xml"
+      }
+    ],
+    "display": "standalone",
+    "themeColor": "#06b6d4",
+    "backgroundColor": "#0f172a"
+  },
+  
+  "author": {
+    "name": "GlyphOS Team",
+    "pubkey": "rL3k8mPn5vQw9xYz2aBcDeFgHiJkLmNoPqRsTuVwXyZ=",
+    "registry": "https://apps.glyphd.com"
+  },
+  
+  "entry": {
+    "html": "index.html",
+    "integrity": "sha384-..."
+  },
+  
+  "capabilities": {},
+  
+  "signature": {
+    "algorithm": "ed25519",
+    "publicKey": "rL3k8mPn5vQw9xYz2aBcDeFgHiJkLmNoPqRsTuVwXyZ=",
+    "signature": "...",
+    "timestamp": "2025-10-04T12:00:00Z"
+  }
+}

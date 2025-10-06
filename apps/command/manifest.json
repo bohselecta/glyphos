@@ -1,0 +1,59 @@
+{
+  "id": "com.glyphd.command",
+  "version": "1.0.0",
+  
+  "manifest": {
+    "name": "Command Center",
+    "description": "Universal app launcher and workflow automation hub",
+    "categories": ["utility", "productivity"],
+    "icons": [
+      {
+        "src": "icon.svg",
+        "sizes": "any",
+        "type": "image/svg+xml"
+      }
+    ],
+    "display": "standalone",
+    "themeColor": "#a855f7",
+    "backgroundColor": "#0f172a"
+  },
+  
+  "author": {
+    "name": "GlyphOS Team",
+    "pubkey": "rL3k8mPn5vQw9xYz2aBcDeFgHiJkLmNoPqRsTuVwXyZ=",
+    "registry": "https://apps.glyphd.com"
+  },
+  
+  "entry": {
+    "html": "index.html",
+    "integrity": "sha384-..."
+  },
+  
+  "capabilities": {
+    "storage": {
+      "indexeddb": true,
+      "quota": "50MB"
+    },
+    "ipc": {
+      "consume": ["*"]
+    }
+  },
+  
+  "extensions": {
+    "commands": [
+      {
+        "id": "open-command-center",
+        "label": "Open Command Center",
+        "shortcut": "Cmd+K",
+        "category": "System"
+      }
+    ]
+  },
+  
+  "signature": {
+    "algorithm": "ed25519",
+    "publicKey": "rL3k8mPn5vQw9xYz2aBcDeFgHiJkLmNoPqRsTuVwXyZ=",
+    "signature": "...",
+    "timestamp": "2025-10-04T12:00:00Z"
+  }
+}

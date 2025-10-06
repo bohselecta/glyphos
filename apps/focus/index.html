@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Focus</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #e2e8f0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    
+    .container {
+      text-align: center;
+      max-width: 600px;
+      padding: 3rem;
+    }
+    
+    .mode-title {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #64748b;
+      margin-bottom: 2rem;
+    }
+    
+    .timer-display {
+      font-size: 8rem;
+      font-weight: 300;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      margin-bottom: 2rem;
+      text-shadow: 0 0 40px rgba(16, 185, 129, 0.3);
+    }
+    
+    .timer-display.focus {
+      color: #10b981;
+    }
+    
+    .timer-display.break {
+      color: #3b82f6;
+    }
+    
+    .timer-display.long-break {
+      color: #8b5cf6;
+    }
+    
+    .progress-ring {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: 0 auto 3rem;
+    }
+    
+    .progress-ring svg {
+      transform: rotate(-90deg);
+    }
+    
+    .progress-ring circle {
+      fill: none;
+      stroke-width: 8;
+    }
+    
+    .progress-ring .background {
+      stroke: rgba(255, 255, 255, 0.1);
+    }
+    
+    .progress-ring .progress {
+      stroke: #10b981;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    
+    .task-display {
+      font-size: 1.5rem;
+      margin-bottom: 3rem;
+      color: #94a3b8;
+      min-height: 2rem;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 3rem;
+    }
+    
+    .btn {
+      padding: 1rem 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 0.5rem;
+      color: #e2e8f0;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      min-width: 120px;
+    }
+    
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+    
+    .btn.primary {
+      background: #10b981;
+      border-color: #10b981;
+    }
+    
+    .btn.primary:hover {
+      background: #059669;
+      border-color: #059669;
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .settings-panel {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    
+    .setting {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .setting-label {
+      font-size: 0.875rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .setting-value {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .setting-value input {
+      width: 80px;
+      padding: 0.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0.375rem;
+      color: #e2e8f0;
+      text-align: center;
+      font-size: 1rem;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin-top: 3rem;
+      padding-top: 3rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .stat {
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #10b981;
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+      font-size: 0.875rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .ambient-indicator {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      padding: 0.75rem 1.5rem;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 2rem;
+      font-size: 0.875rem;
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .ambient-indicator.active {
+      display: flex;
+    }
+    
+    .pulse {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+      }
+    }
+    
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0);
+      pointer-events: none;
+      transition: background 2s ease;
+      z-index: -1;
+    }
+    
+    .overlay.active {
+      background: rgba(0, 0, 0, 0.5);
+    }
+    
+    .quick-actions {
+      margin-top: 2rem;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .quick-btn {
+      padding: 0.5rem 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0.375rem;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+    
+    .quick-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay"></div>
+  
+  <div class="ambient-indicator" id="ambientIndicator">
+    <span class="pulse"></span>
+    <span>Focus Mode Active</span>
+  </div>
+  
+  <div class="container">
+    <div class="mode-title" id="modeTitle">Ready to Focus</div>
+    
+    <div class="progress-ring">
+      <svg width="300" height="300">
+        <circle class="background" cx="150" cy="150" r="140"></circle>
+        <circle class="progress" id="progressCircle" cx="150" cy="150" r="140"></circle>
+      </svg>
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div class="timer-display focus" id="timerDisplay">25:00</div>
+      </div>
+    </div>
+    
+    <div class="task-display" id="taskDisplay"></div>
+    
+    <div class="settings-panel" id="settingsPanel">
+      <div class="setting">
+        <div class="setting-label">Focus</div>
+        <div class="setting-value">
+          <input type="number" id="focusDuration" value="25" min="1" max="60">
+          <span>min</span>
+        </div>
+      </div>
+      
+      <div class="setting">
+        <div class="setting-label">Short Break</div>
+        <div class="setting-value">
+          <input type="number" id="shortBreakDuration" value="5" min="1" max="30">
+          <span>min</span>
+        </div>
+      </div>
+      
+      <div class="setting">
+        <div class="setting-label">Long Break</div>
+        <div class="setting-value">
+          <input type="number" id="longBreakDuration" value="15" min="1" max="60">
+          <span>min</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="controls">
+      <button class="btn primary" id="startBtn">Start Focus</button>
+      <button class="btn" id="resetBtn">Reset</button>
+      <button class="btn" id="skipBtn" disabled>Skip</button>
+    </div>
+    
+    <div class="quick-actions">
+      <button class="quick-btn" id="noteBtn">📝 Focus on Note</button>
+      <button class="quick-btn" id="canvasBtn">🎨 Focus on Canvas</button>
+      <button class="quick-btn" id="customBtn">✏️ Custom Task</button>
+    </div>
+    
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="sessionsToday">0</div>
+        <div class="stat-label">Sessions Today</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="totalMinutes">0</div>
+        <div class="stat-label">Minutes Focused</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="currentStreak">0</div>
+        <div class="stat-label">Day Streak</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Focus - GlyphOS
+    
+    let timer = null
+    let timeRemaining = 25 * 60 // seconds
+    let totalTime = 25 * 60
+    let isRunning = false
+    let mode = 'focus' // focus | short-break | long-break
+    let sessionsCompleted = 0
+    let currentTask = null
+    
+    const progressCircle = document.getElementById('progressCircle')
+    const circumference = 2 * Math.PI * 140
+    progressCircle.style.strokeDasharray = `${circumference} ${circumference}`
+    progressCircle.style.strokeDashoffset = 0
+    
+    // Load stats
+    async function loadStats() {
+      const stats = await OS.storage.kv.get('focus-stats') || {
+        sessionsToday: 0,
+        totalMinutes: 0,
+        streak: 0,
+        lastSession: null
+      }
+      
+      // Check if it's a new day
+      const today = new Date().toDateString()
+      if (stats.lastSession && new Date(stats.lastSession).toDateString() !== today) {
+        // Check if yesterday
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        
+        if (new Date(stats.lastSession).toDateString() === yesterday.toDateString()) {
+          // Continue streak
+        } else {
+          // Reset streak
+          stats.streak = 0
+        }
+        
+        stats.sessionsToday = 0
+      }
+      
+      document.getElementById('sessionsToday').textContent = stats.sessionsToday
+      document.getElementById('totalMinutes').textContent = stats.totalMinutes
+      document.getElementById('currentStreak').textContent = stats.streak
+      
+      return stats
+    }
+    
+    // Save stats
+    async function saveStats(stats) {
+      await OS.storage.kv.set('focus-stats', stats)
+    }
+    
+    // Update timer display
+    function updateDisplay() {
+      const minutes = Math.floor(timeRemaining / 60)
+      const seconds = timeRemaining % 60
+      
+      document.getElementById('timerDisplay').textContent = 
+        `${minutes}:${seconds.toString().padStart(2, '0')}`
+      
+      // Update progress ring
+      const progress = 1 - (timeRemaining / totalTime)
+      const offset = circumference * (1 - progress)
+      progressCircle.style.strokeDashoffset = offset
+      
+      // Update title
+      document.title = `${minutes}:${seconds.toString().padStart(2, '0')} - Focus`
+    }
+    
+    // Start timer
+    function start() {
+      if (isRunning) return
+      
+      isRunning = true
+      document.getElementById('startBtn').textContent = 'Pause'
+      document.getElementById('skipBtn').disabled = false
+      
+      // Enable ambient mode
+      if (mode === 'focus') {
+        enableAmbientMode()
+      }
+      
+      timer = setInterval(() => {
+        timeRemaining--
+        updateDisplay()
+        
+        if (timeRemaining <= 0) {
+          complete()
+        }
+      }, 1000)
+    }
+    
+    // Pause timer
+    function pause() {
+      if (!isRunning) return
+      
+      isRunning = false
+      clearInterval(timer)
+      document.getElementById('startBtn').textContent = 'Resume'
+      
+      // Disable ambient mode
+      disableAmbientMode()
+    }
+    
+    // Reset timer
+    function reset() {
+      pause()
+      
+      if (mode === 'focus') {
+        timeRemaining = parseInt(document.getElementById('focusDuration').value) * 60
+      } else if (mode === 'short-break') {
+        timeRemaining = parseInt(document.getElementById('shortBreakDuration').value) * 60
+      } else {
+        timeRemaining = parseInt(document.getElementById('longBreakDuration').value) * 60
+      }
+      
+      totalTime = timeRemaining
+      updateDisplay()
+      
+      document.getElementById('startBtn').textContent = 'Start'
+      document.getElementById('skipBtn').disabled = true
+    }
+    
+    // Complete session
+    async function complete() {
+      pause()
+      
+      // Notification
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Focus Session Complete!', {
+          body: mode === 'focus' ? 'Time for a break' : 'Ready to focus again?',
+          icon: '/icon.svg'
+        })
+      }
+      
+      // Update stats
+      if (mode === 'focus') {
+        const stats = await loadStats()
+        stats.sessionsToday++
+        stats.totalMinutes += parseInt(document.getElementById('focusDuration').value)
+        stats.lastSession = Date.now()
+        
+        // Update streak
+        const today = new Date().toDateString()
+        if (!stats.lastStreakDate || stats.lastStreakDate !== today) {
+          stats.streak++
+          stats.lastStreakDate = today
+        }
+        
+        await saveStats(stats)
+        await loadStats()
+        
+        sessionsCompleted++
+      }
+      
+      // Log session
+      await logSession()
+      
+      // Switch mode
+      if (mode === 'focus') {
+        mode = sessionsCompleted % 4 === 0 ? 'long-break' : 'short-break'
+      } else {
+        mode = 'focus'
+      }
+      
+      updateMode()
+      reset()
+    }
+    
+    // Skip to next session
+    function skip() {
+      if (mode === 'focus') {
+        mode = 'short-break'
+      } else {
+        mode = 'focus'
+      }
+      
+      updateMode()
+      reset()
+    }
+    
+    // Update mode
+    function updateMode() {
+      const timerDisplay = document.getElementById('timerDisplay')
+      const modeTitle = document.getElementById('modeTitle')
+      
+      timerDisplay.className = `timer-display ${mode}`
+      progressCircle.style.stroke = 
+        mode === 'focus' ? '#10b981' : 
+        mode === 'short-break' ? '#3b82f6' : '#8b5cf6'
+      
+      if (mode === 'focus') {
+        modeTitle.textContent = currentTask || 'Focus Session'
+      } else if (mode === 'short-break') {
+        modeTitle.textContent = 'Short Break'
+      } else {
+        modeTitle.textContent = 'Long Break'
+      }
+    }
+    
+    // Enable ambient mode
+    function enableAmbientMode() {
+      document.getElementById('overlay').classList.add('active')
+      document.getElementById('ambientIndicator').classList.add('active')
+      
+      // Broadcast focus event to other apps
+      OS.ipc.broadcast('focus-started', {
+        duration: totalTime,
+        task: currentTask
+      })
+    }
+    
+    // Disable ambient mode
+    function disableAmbientMode() {
+      document.getElementById('overlay').classList.remove('active')
+      document.getElementById('ambientIndicator').classList.remove('active')
+      
+      OS.ipc.broadcast('focus-ended', {
+        completed: timeRemaining === 0
+      })
+    }
+    
+    // Log session
+    async function logSession() {
+      const session = {
+        mode,
+        task: currentTask,
+        duration: totalTime / 60,
+        completed: timeRemaining === 0,
+        timestamp: Date.now()
+      }
+      
+      try {
+        const db = OS.storage.db
+        await db.insert('sessions', [session])
+      } catch (e) {
+        // Create collection if it doesn't exist
+        try {
+          await OS.storage.db.createCollection('sessions', {
+            properties: {
+              mode: { type: 'string' },
+              task: { type: 'string' },
+              duration: { type: 'number' },
+              completed: { type: 'boolean' },
+              timestamp: { type: 'date' }
+            }
+          })
+          await db.insert('sessions', [session])
+        } catch (err) {
+          console.error('Failed to log session:', err)
+        }
+      }
+    }
+    
+    // Quick actions
+    document.getElementById('noteBtn').addEventListener('click', async () => {
+      try {
+        const notes = await OS.ipc.call('com.glyphd.notes', 'getRecentNotes')
+        if (notes && notes.length > 0) {
+          currentTask = `Work on "${notes[0].title}"`
+          document.getElementById('taskDisplay').textContent = currentTask
+          updateMode()
+        }
+      } catch (e) {
+        currentTask = 'Work on Notes'
+        document.getElementById('taskDisplay').textContent = currentTask
+        updateMode()
+      }
+    })
+    
+    document.getElementById('canvasBtn').addEventListener('click', () => {
+      currentTask = 'Work on Canvas'
+      document.getElementById('taskDisplay').textContent = currentTask
+      updateMode()
+    })
+    
+    document.getElementById('customBtn').addEventListener('click', () => {
+      const task = prompt('What are you focusing on?')
+      if (task) {
+        currentTask = task
+        document.getElementById('taskDisplay').textContent = currentTask
+        updateMode()
+      }
+    })
+    
+    // Controls
+    document.getElementById('startBtn').addEventListener('click', () => {
+      if (isRunning) {
+        pause()
+      } else {
+        start()
+      }
+    })
+    
+    document.getElementById('resetBtn').addEventListener('click', reset)
+    document.getElementById('skipBtn').addEventListener('click', skip)
+    
+    // Settings changes
+    document.querySelectorAll('.setting-value input').forEach(input => {
+      input.addEventListener('change', () => {
+        if (!isRunning) {
+          reset()
+        }
+      })
+    })
+    
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+    
+    // Expose IPC method
+    OS.ipc.expose('startSession', (duration, task) => {
+      currentTask = task || null
+      document.getElementById('focusDuration').value = duration
+      updateMode()
+      reset()
+      start()
+      return 'Session started'
+    })
+    
+    // Initialize
+    loadStats()
+    updateDisplay()
+    updateMode()
+  </script>
+</body>
+</html>

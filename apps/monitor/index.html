@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Monitor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Monaco', 'Courier New', monospace;
+      background: #0f172a;
+      color: #06b6d4;
+      padding: 2rem;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .header {
+      margin-bottom: 2rem;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 1rem;
+    }
+    
+    .title {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .subtitle {
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+    }
+    
+    .card-title {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      padding: 0.5rem;
+      background: #0f172a;
+      border-radius: 0.25rem;
+    }
+    
+    .stat-label {
+      color: #64748b;
+    }
+    
+    .stat-value {
+      color: #06b6d4;
+      font-weight: 600;
+    }
+    
+    .progress-bar {
+      height: 8px;
+      background: #0f172a;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #06b6d4, #3b82f6);
+      transition: width 0.3s;
+    }
+    
+    .processes {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .process {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      padding: 0.75rem;
+      border-bottom: 1px solid #334155;
+      font-size: 0.875rem;
+    }
+    
+    .process:last-child {
+      border-bottom: none;
+    }
+    
+    .process-header {
+      color: #94a3b8;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+    
+    .process-name {
+      color: #06b6d4;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">⚡ SYSTEM MONITOR</div>
+    <div class="subtitle">Real-time GlyphOS statistics</div>
+  </div>
+  
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">Storage</div>
+      <div class="stat">
+        <span class="stat-label">Used</span>
+        <span class="stat-value" id="storageUsed">0 MB</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Available</span>
+        <span class="stat-value" id="storageAvailable">0 MB</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="storageProgress"></div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title">Processes</div>
+      <div class="stat">
+        <span class="stat-label">Running</span>
+        <span class="stat-value" id="processCount">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Suspended</span>
+        <span class="stat-value" id="suspendedCount">0</span>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title">Network</div>
+      <div class="stat">
+        <span class="stat-label">Status</span>
+        <span class="stat-value" id="networkStatus">Online</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Requests</span>
+        <span class="stat-value" id="requestCount">0</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="processes">
+    <div class="process process-header">
+      <div>App Name</div>
+      <div>State</div>
+      <div>Memory</div>
+      <div>Uptime</div>
+    </div>
+    <div id="processList"></div>
+  </div>
+
+  <script type="module">
+    // System Monitor - GlyphOS
+    
+    // Update interval
+    const UPDATE_INTERVAL = 1000
+    
+    // Format bytes
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B'
+      const k = 1024
+      const sizes = ['B', 'KB', 'MB', 'GB']
+      const i = Math.floor(Math.log(bytes) / Math.log(k))
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+    }
+    
+    // Format uptime
+    function formatUptime(ms) {
+      const seconds = Math.floor(ms / 1000)
+      const minutes = Math.floor(seconds / 60)
+      const hours = Math.floor(minutes / 60)
+      
+      if (hours > 0) return `${hours}h ${minutes % 60}m`
+      if (minutes > 0) return `${minutes}m ${seconds % 60}s`
+      return `${seconds}s`
+    }
+    
+    // Update storage stats
+    async function updateStorage() {
+      try {
+        const quota = await OS.storage.quota()
+        
+        document.getElementById('storageUsed').textContent = formatBytes(quota.used)
+        document.getElementById('storageAvailable').textContent = formatBytes(quota.available)
+        document.getElementById('storageProgress').style.width = quota.percentUsed + '%'
+      } catch (error) {
+        console.error('Failed to get storage quota:', error)
+      }
+    }
+    
+    // Update process list
+    async function updateProcesses() {
+      try {
+        const processes = OS.process.list()
+        
+        // Count by state
+        const running = processes.filter(p => p.state === 'running').length
+        const suspended = processes.filter(p => p.state === 'suspended').length
+        
+        document.getElementById('processCount').textContent = running
+        document.getElementById('suspendedCount').textContent = suspended
+        
+        // Render process list
+        const listEl = document.getElementById('processList')
+        listEl.innerHTML = ''
+        
+        processes
+          .sort((a, b) => b.spawnedAt - a.spawnedAt)
+          .forEach(proc => {
+            const div = document.createElement('div')
+            div.className = 'process'
+            
+            const uptime = Date.now() - proc.spawnedAt
+            
+            div.innerHTML = `
+              <div class="process-name">${proc.manifest.name}</div>
+              <div>${proc.state}</div>
+              <div>${formatBytes(proc.resourceUsage.memory)}</div>
+              <div>${formatUptime(uptime)}</div>
+            `
+            
+            listEl.appendChild(div)
+          })
+      } catch (error) {
+        console.error('Failed to get processes:', error)
+      }
+    }
+    
+    // Update network stats
+    function updateNetwork() {
+      const isOnline = navigator.onLine
+      document.getElementById('networkStatus').textContent = isOnline ? 'Online' : 'Offline'
+      
+      // Request count would come from OS API if available
+      // For now, just increment
+      const current = parseInt(document.getElementById('requestCount').textContent)
+      document.getElementById('requestCount').textContent = current + Math.floor(Math.random() * 5)
+    }
+    
+    // Update all stats
+    async function updateAll() {
+      await updateStorage()
+      await updateProcesses()
+      updateNetwork()
+    }
+    
+    // Start monitoring
+    updateAll()
+    setInterval(updateAll, UPDATE_INTERVAL)
+    
+    // Listen for network changes
+    window.addEventListener('online', updateNetwork)
+    window.addEventListener('offline', updateNetwork)
+  </script>
+</body>
+</html>

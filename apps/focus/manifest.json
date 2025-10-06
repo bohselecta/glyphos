@@ -1,0 +1,62 @@
+{
+  "id": "com.glyphd.focus",
+  "version": "1.0.0",
+  
+  "manifest": {
+    "name": "Focus",
+    "description": "Temporal flow management with productivity rituals",
+    "longDescription": "Pomodoro-style timer integrated with Notes and Canvas. Adapts to system performance, dims desktop during focus sessions, and logs productivity metrics.",
+    "categories": ["productivity", "utility"],
+    "tags": ["pomodoro", "focus", "productivity", "time-management", "automation"],
+    "icons": [
+      {
+        "src": "icon.svg",
+        "sizes": "any",
+        "type": "image/svg+xml"
+      }
+    ],
+    "display": "minimal-ui",
+    "themeColor": "#10b981",
+    "backgroundColor": "#0f172a"
+  },
+  
+  "author": {
+    "name": "GlyphOS Team",
+    "pubkey": "rL3k8mPn5vQw9xYz2aBcDeFgHiJkLmNoPqRsTuVwXyZ=",
+    "registry": "https://apps.glyphd.com"
+  },
+  
+  "entry": {
+    "html": "index.html",
+    "integrity": "sha384-..."
+  },
+  
+  "capabilities": {
+    "storage": {
+      "indexeddb": true,
+      "quota": "50MB"
+    },
+    "notifications": true,
+    "ipc": {
+      "consume": ["com.glyphd.notes.*", "com.glyphd.canvas.*"],
+      "expose": [
+        {
+          "name": "startSession",
+          "params": [
+            {"name": "duration", "type": "number"},
+            {"name": "task", "type": "string"}
+          ],
+          "returns": "string",
+          "description": "Start a focus session"
+        }
+      ]
+    }
+  },
+  
+  "signature": {
+    "algorithm": "ed25519",
+    "publicKey": "rL3k8mPn5vQw9xYz2aBcDeFgHiJkLmNoPqRsTuVwXyZ=",
+    "signature": "...",
+    "timestamp": "2025-10-04T12:00:00Z"
+  }
+}

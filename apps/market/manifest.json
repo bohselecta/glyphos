@@ -1,0 +1,48 @@
+{
+  "id": "com.glyphd.market",
+  "version": "1.0.0",
+  
+  "manifest": {
+    "name": "Market",
+    "description": "Federated app discovery & publishing hub",
+    "longDescription": "Browse apps across federated registries. One-click install/uninstall. Background sync keeps your app catalog updated. Visualize the entire GlyphOS ecosystem.",
+    "categories": ["utility", "tools"],
+    "tags": ["marketplace", "federation", "discovery", "apps"],
+    "icons": [
+      {
+        "src": "icon.svg",
+        "sizes": "any",
+        "type": "image/svg+xml"
+      }
+    ],
+    "display": "standalone",
+    "themeColor": "#06b6d4",
+    "backgroundColor": "#0f172a"
+  },
+  
+  "author": {
+    "name": "GlyphOS Team",
+    "pubkey": "rL3k8mPn5vQw9xYz2aBcDeFgHiJkLmNoPqRsTuVwXyZ=",
+    "registry": "https://apps.glyphd.com"
+  },
+  
+  "entry": {
+    "html": "index.html",
+    "integrity": "sha384-..."
+  },
+  
+  "capabilities": {
+    "storage": {
+      "indexeddb": true,
+      "blob": true,
+      "quota": "200MB"
+    }
+  },
+  
+  "signature": {
+    "algorithm": "ed25519",
+    "publicKey": "rL3k8mPn5vQw9xYz2aBcDeFgHiJkLmNoPqRsTuVwXyZ=",
+    "signature": "...",
+    "timestamp": "2025-10-04T12:00:00Z"
+  }
+}

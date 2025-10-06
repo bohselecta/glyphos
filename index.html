@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GlyphOS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #333;
+      border-top: 4px solid #007acc;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Top Bar - Clean & Minimal */
+    .top-bar {
+      height: 48px;
+      background: rgba(15, 23, 42, 0.95);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1rem;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+    }
+
+    /* OS Brand */
+    .os-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: white;
+    }
+
+    .glyph-logo {
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .os-name {
+      font-size: 1rem;
+      letter-spacing: 0.02em;
+    }
+
+    /* Active App Title */
+    .active-app-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    /* System Controls */
+    .system-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-btn {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .status-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .status-btn .icon {
+      font-size: 1.25rem;
+    }
+
+    /* Status Dot (for realtime indicator) */
+    .status-dot {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      border: 2px solid rgba(15, 23, 42, 0.95);
+      display: none;
+    }
+
+    .status-btn.active .status-dot {
+      display: block;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.1); }
+    }
+
+    /* User Button */
+    .user-btn {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .user-btn:hover {
+      transform: scale(1.05);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .user-avatar {
+      font-size: 1.25rem;
+    }
+
+    /* Desktop */
+    .desktop {
+      position: fixed;
+      top: 48px;
+      left: 0;
+      right: 0;
+      bottom: 80px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .desktop.loaded {
+      display: block;
+    }
+
+    /* Dock */
+    .dock {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.1);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .dock-btn {
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-size: 1.5rem;
+    }
+
+    .dock-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    .dock-btn.active {
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .dock-divider {
+      width: 1px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.2);
+      margin: 0 0.5rem;
+    }
+
+    /* Windows */
+    .window {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.98);
+      -webkit-backdrop-filter: blur(40px);
+      backdrop-filter: blur(40px);
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+      z-index: 100;
+    }
+
+    .window-header {
+      height: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1rem;
+      cursor: move;
+    }
+
+    .window-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #1e293b;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .window-btn {
+      width: 24px;
+      height: 24px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .window-btn.close {
+      background: #ef4444;
+      color: white;
+    }
+
+    .window-btn.close:hover {
+      background: #dc2626;
+    }
+
+    .window-btn.minimize {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .window-btn.minimize:hover {
+      background: #d97706;
+    }
+
+    .window-btn.maximize {
+      background: #10b981;
+      color: white;
+    }
+
+    .window-btn.maximize:hover {
+      background: #059669;
+    }
+
+    .window-body {
+      height: calc(100% - 40px);
+      overflow: hidden;
+    }
+
+    .window-body iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Legacy App Launcher (will be removed) */
+    .app-launcher {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .app-launcher.active {
+      display: flex;
+    }
+
+    .app-grid {
+      background: rgba(26, 26, 26, 0.95);
+      border-radius: 20px;
+      padding: 2rem;
+      max-width: 800px;
+      max-height: 600px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1.5rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .app-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .app-icon:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: scale(1.05);
+    }
+
+    .app-icon:active {
+      transform: scale(0.95);
+    }
+
+    .app-icon-image {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .app-icon-name {
+      font-size: 12px;
+      text-align: center;
+      color: #e2e8f0;
+      font-weight: 500;
+    }
+
+    .launcher-header {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #e2e8f0;
+    }
+
+    .launcher-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .launcher-subtitle {
+      font-size: 14px;
+      color: #94a3b8;
+    }
+
+
+    /* Panel System */
+    .panel {
+      position: fixed;
+      top: 48px; /* Below top bar */
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      width: 90%;
+      max-width: 800px;
+      height: calc(100vh - 148px); /* Top bar + dock space */
+      background: rgba(255, 255, 255, 0.98);
+      -webkit-backdrop-filter: blur(40px);
+      backdrop-filter: blur(40px);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      display: none;
+      flex-direction: column;
+      opacity: 0;
+      z-index: 900;
+      overflow: hidden;
+    }
+
+    .panel.active {
+      display: flex;
+      animation: panelSlideIn 0.3s ease forwards;
+    }
+
+    @keyframes panelSlideIn {
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    .panel-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .search-input:focus {
+      background: white;
+      border-color: #a855f7;
+    }
+
+    /* App Grid in Panel */
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 1.5rem;
+      padding: 1rem 0;
+    }
+
+    .app-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      padding: 1rem;
+      border-radius: 12px;
+      transition: all 0.2s;
+    }
+
+    .app-item:hover {
+      background: rgba(168, 85, 247, 0.1);
+    }
+
+    .app-item-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+
+    .app-item-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #1e293b;
+      text-align: center;
+    }
+
+    /* App Categories */
+    .app-categories {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .category-chip {
+      padding: 0.5rem 1rem;
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 20px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .category-chip:hover {
+      background: rgba(168, 85, 247, 0.1);
+      border-color: #a855f7;
+    }
+
+    .category-chip.active {
+      background: #a855f7;
+      color: white;
+      border-color: #a855f7;
+    }
+
+    /* Folder Grid */
+    .folder-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 1.5rem;
+      padding: 1rem 0;
+    }
+
+    .folder-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      padding: 1rem;
+      border-radius: 12px;
+      transition: all 0.2s;
+    }
+
+    .folder-item:hover {
+      background: rgba(168, 85, 247, 0.1);
+    }
+
+    .folder-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+
+    .folder-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #1e293b;
+      text-align: center;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .breadcrumb-item {
+      padding: 0.5rem 1rem;
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .breadcrumb-item:hover {
+      background: rgba(168, 85, 247, 0.1);
+      border-color: #a855f7;
+    }
+
+    /* Market Section */
+    .market-section {
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 1rem;
+    }
+
+    .featured-apps {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .market-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .market-app {
+      background: white;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .market-app:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .market-app-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .market-app-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #1e293b;
+      margin-bottom: 0.25rem;
+    }
+
+    .market-app-desc {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-bottom: 0.75rem;
+    }
+
+    .market-app-install {
+      width: 100%;
+      padding: 0.5rem;
+      background: #a855f7;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .market-app-install:hover {
+      background: #9333ea;
+    }
+
+    /* Button Primary */
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: #a855f7;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+      background: #9333ea;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div>Initializing GlyphOS...</div>
+    </div>
+
+    <!-- Top Status Bar -->
+    <div class="top-bar">
+      <!-- Left: OS Identity -->
+      <div class="os-brand">
+        <span class="glyph-logo">◬</span>
+        <span class="os-name">GlyphOS</span>
+      </div>
+      
+      <!-- Center: Active App Title (when window open) -->
+      <div class="active-app-title" id="activeAppTitle"></div>
+      
+      <!-- Right: System Features -->
+      <div class="system-controls">
+        <!-- Realtime Status (shows if connected to any rooms) -->
+        <button class="status-btn" id="realtimeStatus" title="Realtime">
+          <span class="status-dot"></span>
+          <span class="icon">⚡</span>
+        </button>
+        
+        <!-- AI Availability -->
+        <button class="status-btn" id="aiStatus" title="AI Ready">
+          <span class="icon">🤖</span>
+        </button>
+        
+        <!-- System Performance/Health -->
+        <button class="status-btn" id="systemStatus" title="System">
+          <span class="icon">📊</span>
+        </button>
+        
+        <!-- User Account/Auth -->
+        <button class="user-btn" id="userBtn" title="Account">
+          <span class="user-avatar">👤</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="desktop" id="desktop">
+      <!-- Windows Container -->
+      <div id="windows-container"></div>
+    </div>
+
+    <!-- Bottom Dock -->
+    <div class="dock">
+      <!-- App Launcher -->
+      <button class="dock-btn" id="appsBtn" title="Apps">
+        <span class="dock-icon">⊞</span>
+      </button>
+      
+      <!-- File Manager -->
+      <button class="dock-btn" id="filesBtn" title="Files">
+        <span class="dock-icon">📁</span>
+      </button>
+      
+      <!-- App Marketplace -->
+      <button class="dock-btn" id="marketBtn" title="Market">
+        <span class="dock-icon">🏪</span>
+      </button>
+      
+      <!-- Running Apps (dynamically added) -->
+      <div class="dock-divider"></div>
+      <div id="runningApps"></div>
+    </div>
+
+    <!-- The Three Panel Views - Enhanced -->
+    
+    <!-- 1. App Launcher Panel -->
+    <div class="panel" id="appsPanel">
+      <div class="panel-header">
+        <input type="text" class="search-input" placeholder="Search apps..." id="appSearch">
+      </div>
+      
+      <div class="panel-content">
+        <!-- Categories -->
+        <div class="app-categories">
+          <button class="category-chip active" data-category="all">All</button>
+          <button class="category-chip" data-category="productivity">Productivity</button>
+          <button class="category-chip" data-category="creative">Creative</button>
+          <button class="category-chip" data-category="ai">AI</button>
+          <button class="category-chip" data-category="tools">Tools</button>
+        </div>
+        
+        <!-- App Grid -->
+        <div class="app-grid" id="appGrid">
+          <!-- Apps inserted here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. File Manager Panel -->
+    <div class="panel" id="filesPanel">
+      <div class="panel-header">
+        <div class="breadcrumb" id="breadcrumb">
+          <button class="breadcrumb-item">🏠 Home</button>
+        </div>
+      </div>
+      
+      <div class="panel-content">
+        <!-- Quick Access Folders -->
+        <div class="folder-grid" id="folderGrid">
+          <div class="folder-item" data-path="desktop">
+            <div class="folder-icon">🖥️</div>
+            <div class="folder-name">Desktop</div>
+          </div>
+          <div class="folder-item" data-path="documents">
+            <div class="folder-icon">📄</div>
+            <div class="folder-name">Documents</div>
+          </div>
+          <div class="folder-item" data-path="pictures">
+            <div class="folder-icon">🖼️</div>
+            <div class="folder-name">Pictures</div>
+          </div>
+          <div class="folder-item" data-path="downloads">
+            <div class="folder-icon">⬇️</div>
+            <div class="folder-name">Downloads</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. App Marketplace Panel -->
+    <div class="panel" id="marketPanel">
+      <div class="panel-header">
+        <input type="text" class="search-input" placeholder="Search marketplace..." id="marketSearch">
+        <button class="btn-primary" id="publishBtn">
+          <span>📤</span>
+          <span>Publish App</span>
+        </button>
+      </div>
+      
+      <div class="panel-content">
+        <!-- Featured Section -->
+        <div class="market-section">
+          <h3 class="section-title">Featured</h3>
+          <div class="featured-apps" id="featuredApps">
+            <!-- Featured app cards -->
+          </div>
+        </div>
+        
+        <!-- Browse All -->
+        <div class="market-section">
+          <h3 class="section-title">Browse All Apps</h3>
+          <div class="market-grid" id="marketGrid">
+            <!-- Market app cards -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/index.ts"></script>
+  <script type="module">
+    // Time update removed - using new top bar design
+
+    // Show desktop when loaded
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loading').style.display = 'none'
+        document.getElementById('desktop').classList.add('loaded')
+      }, 2000)
+    })
+
+    // Command palette removed - using new panel system
+
+    // Attach window controls - THE KEY METHOD
+    function attachWindowControls(windowElement, windowId) {
+      console.log('Attaching controls to window:', windowId)
+      const buttons = windowElement.querySelectorAll('.window-btn')
+      console.log('Found buttons:', buttons.length)
+      
+      buttons.forEach((button, index) => {
+        console.log(`Attaching listener to button ${index}:`, button.dataset.action)
+        button.addEventListener('click', (e) => {
+          e.stopPropagation() // Prevent window drag
+          e.preventDefault()
+          
+          const action = button.dataset.action
+          console.log(`Window control clicked: ${action} for window ${windowId}`)
+          
+          switch (action) {
+            case 'close':
+              closeWindow(windowId)
+              break
+            case 'minimize':
+              minimizeWindow(windowId)
+              break
+            case 'maximize':
+              toggleMaximize(windowId)
+              break
+          }
+        })
+      })
+    }
+    
+    // THE CLOSE METHOD
+    function closeWindow(windowId) {
+      try {
+        console.log('Closing window:', windowId)
+        const windowManager = window.GlyphOS.getWindowManager()
+        const success = windowManager.closeWindow(windowId)
+        console.log('Close result:', success)
+        
+        if (success) {
+          // Remove from DOM immediately
+          const windowElement = document.querySelector(`[data-window-id="${windowId}"]`)?.closest('.window')
+          if (windowElement) {
+            windowElement.remove()
+          }
+          
+          // Re-render to update the window list
+          renderWindows()
+        }
+      } catch (error) {
+        console.error('Error closing window:', error)
+      }
+    }
+    
+    function minimizeWindow(windowId) {
+      console.log('Minimizing window:', windowId)
+      const windowManager = window.GlyphOS.getWindowManager()
+      windowManager.minimizeWindow(windowId)
+      renderWindows()
+    }
+    
+    function toggleMaximize(windowId) {
+      console.log('Maximizing window:', windowId)
+      const windowManager = window.GlyphOS.getWindowManager()
+      windowManager.maximizeWindow(windowId)
+      renderWindows()
+    }
+
+    // Window rendering functions
+    function renderWindows() {
+      const container = document.getElementById('windows-container')
+      const windowManager = window.GlyphOS.getWindowManager()
+      const windows = windowManager.getWindows()
+      
+      console.log('Rendering windows:', windows.length, 'windows')
+      console.log('Window IDs:', windows.map(w => w.id))
+      
+      container.innerHTML = ''
+      
+      windows.forEach(window => {
+        console.log('Rendering window:', window.id, window.title)
+        const windowEl = document.createElement('div')
+        windowEl.className = `window ${window.focused ? 'focused' : ''}`
+        windowEl.id = window.id // Set the ID
+        windowEl.style.left = `${window.bounds.x}px`
+        windowEl.style.top = `${window.bounds.y}px`
+        windowEl.style.width = `${window.bounds.width}px`
+        windowEl.style.height = `${window.bounds.height}px`
+        windowEl.style.zIndex = window.zIndex
+        
+        windowEl.innerHTML = `
+          <div class="window-header" data-window-id="${window.id}">
+            <div class="window-title">${window.title}</div>
+            <div class="window-controls">
+              <button class="window-btn minimize" data-action="minimize">−</button>
+              <button class="window-btn maximize" data-action="maximize">□</button>
+              <button class="window-btn close" data-action="close">×</button>
+            </div>
+          </div>
+          <div class="window-body">
+            <iframe class="window-content" src="${window.url}" data-window-id="${window.id}" onload="console.log('Window loaded:', this.src)"></iframe>
+          </div>
+        `
+        
+        // CRITICAL: Add to DOM FIRST
+        container.appendChild(windowEl)
+        console.log('Window added to DOM:', windowEl.id)
+        
+        // THEN attach event listeners
+        attachWindowControls(windowEl, window.id)
+        
+        // TEST: Add a simple click handler to test if buttons work
+        const closeBtn = windowEl.querySelector('.window-btn.close')
+        if (closeBtn) {
+          console.log('Close button found, adding test handler')
+          console.log('Close button element:', closeBtn)
+          console.log('Close button classes:', closeBtn.className)
+          console.log('Close button dataset:', closeBtn.dataset)
+          
+          closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            console.log('TEST: Close button clicked!')
+            console.log('TEST: Event object:', e)
+            console.log('TEST: Calling closeWindow with ID:', window.id)
+            closeWindow(window.id)
+          })
+          
+          // Also test if the button is visible and clickable
+          console.log('Close button computed style:', window.getComputedStyle(closeBtn))
+          console.log('Close button offset:', closeBtn.offsetWidth, 'x', closeBtn.offsetHeight)
+        } else {
+          console.log('Close button NOT found!')
+        }
+        
+        // Add focus handling
+        windowEl.addEventListener('mousedown', () => {
+          windowManager.focusWindow(window.id)
+          renderWindows()
+        })
+      })
+    }
+
+    // Panel management
+    const panels = {
+      apps: document.getElementById('appsPanel'),
+      files: document.getElementById('filesPanel'),
+      market: document.getElementById('marketPanel')
+    }
+
+    function openPanel(panelName) {
+      // Close all panels
+      Object.values(panels).forEach(p => p?.classList.remove('active'))
+      
+      // Open requested panel
+      panels[panelName]?.classList.add('active')
+      
+      // Update dock button states
+      document.querySelectorAll('.dock-btn').forEach(btn => btn.classList.remove('active'))
+      document.getElementById(`${panelName}Btn`)?.classList.add('active')
+    }
+
+    function closeAllPanels() {
+      Object.values(panels).forEach(p => p?.classList.remove('active'))
+      document.querySelectorAll('.dock-btn').forEach(btn => btn.classList.remove('active'))
+    }
+
+    // Dock button handlers
+    document.getElementById('appsBtn').addEventListener('click', () => openPanel('apps'))
+    document.getElementById('filesBtn').addEventListener('click', () => openPanel('files'))
+    document.getElementById('marketBtn').addEventListener('click', () => openPanel('market'))
+
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeAllPanels()
+    })
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.panel') && !e.target.closest('.dock-btn')) {
+        closeAllPanels()
+      }
+    })
+
+    // Populate app grid in apps panel
+    function populateAppsPanel() {
+      const appGrid = document.getElementById('appGrid')
+      
+      // Define all installed apps
+      const apps = [
+        {
+          id: 'com.glyphd.notes',
+          name: 'Notes',
+          icon: '📝',
+          url: 'http://localhost:3000/apps/notes/index.html',
+          description: 'Note-taking app',
+          category: 'productivity'
+        },
+        {
+          id: 'com.glyphd.canvas',
+          name: 'Glyph Canvas',
+          icon: '🎨',
+          url: 'http://localhost:3000/apps/canvas/index.html',
+          description: 'Creative drawing app',
+          category: 'creative'
+        },
+        {
+          id: 'com.glyphd.collab',
+          name: 'Live Collab',
+          icon: '🤝',
+          url: 'http://localhost:3000/apps/collab/index.html',
+          description: 'Real-time collaboration',
+          category: 'productivity'
+        },
+        {
+          id: 'com.glyphd.aichat',
+          name: 'AI Chat',
+          icon: '🤖',
+          url: 'http://localhost:3000/apps/aichat/index.html',
+          description: 'Chat with AI',
+          category: 'ai'
+        },
+        {
+          id: 'com.glyphd.monitor',
+          name: 'System Monitor',
+          icon: '📊',
+          url: 'http://localhost:3000/apps/monitor/index.html',
+          description: 'System performance monitor',
+          category: 'tools'
+        },
+        {
+          id: 'com.glyphd.command',
+          name: 'Command Center',
+          icon: '⚡',
+          url: 'http://localhost:3000/apps/command/index.html',
+          description: 'App launcher and workflows',
+          category: 'tools'
+        },
+        {
+          id: 'com.glyphd.memory',
+          name: 'Memory Graph',
+          icon: '🧠',
+          url: 'http://localhost:3000/apps/memory/index.html',
+          description: 'Knowledge graph visualization',
+          category: 'ai'
+        },
+        {
+          id: 'com.glyphd.studio',
+          name: 'Studio Player',
+          icon: '🎬',
+          url: 'http://localhost:3000/apps/studio/index.html',
+          description: 'Media player and visualizer',
+          category: 'creative'
+        },
+        {
+          id: 'com.glyphd.focus',
+          name: 'Focus',
+          icon: '🎯',
+          url: 'http://localhost:3000/apps/focus/index.html',
+          description: 'Pomodoro timer and focus tool',
+          category: 'productivity'
+        },
+        {
+          id: 'com.glyphd.market',
+          name: 'Market',
+          icon: '🏪',
+          url: 'http://localhost:3000/apps/market/index.html',
+          description: 'App store and discovery',
+          category: 'tools'
+        }
+      ]
+
+      appGrid.innerHTML = ''
+
+      // Add app icons
+      apps.forEach(app => {
+        const appItem = document.createElement('div')
+        appItem.className = 'app-item'
+        appItem.dataset.category = app.category
+        appItem.title = app.description
+        
+        appItem.innerHTML = `
+          <div class="app-item-icon">${app.icon}</div>
+          <div class="app-item-name">${app.name}</div>
+        `
+        
+        appItem.addEventListener('click', () => {
+          launchApp(app)
+          closeAllPanels()
+        })
+        
+        appGrid.appendChild(appItem)
+      })
+    }
+
+    // Category filtering
+    document.querySelectorAll('.category-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'))
+        chip.classList.add('active')
+        
+        const category = chip.dataset.category
+        const appItems = document.querySelectorAll('.app-item')
+        
+        appItems.forEach(item => {
+          if (category === 'all' || item.dataset.category === category) {
+            item.style.display = 'flex'
+          } else {
+            item.style.display = 'none'
+          }
+        })
+      })
+    })
+
+    // App search
+    document.getElementById('appSearch').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase()
+      const appItems = document.querySelectorAll('.app-item')
+      
+      appItems.forEach(item => {
+        const name = item.querySelector('.app-item-name').textContent.toLowerCase()
+        if (name.includes(query)) {
+          item.style.display = 'flex'
+        } else {
+          item.style.display = 'none'
+        }
+      })
+    })
+
+    // Populate market panel
+    function populateMarketPanel() {
+      const featuredApps = document.getElementById('featuredApps')
+      const marketGrid = document.getElementById('marketGrid')
+      
+      // Featured apps
+      const featured = [
+        { name: 'AI Assistant', icon: '🤖', desc: 'Advanced AI helper' },
+        { name: 'Code Editor', icon: '💻', desc: 'Full-featured code editor' },
+        { name: 'Design Tool', icon: '🎨', desc: 'Professional design suite' }
+      ]
+      
+      featuredApps.innerHTML = featured.map(app => `
+        <div class="market-app">
+          <div class="market-app-icon">${app.icon}</div>
+          <div class="market-app-name">${app.name}</div>
+          <div class="market-app-desc">${app.desc}</div>
+          <button class="market-app-install">Install</button>
+        </div>
+      `).join('')
+      
+      // All apps
+      const allApps = [
+        { name: 'Calculator', icon: '🧮', desc: 'Scientific calculator' },
+        { name: 'Calendar', icon: '📅', desc: 'Event management' },
+        { name: 'Weather', icon: '🌤️', desc: 'Weather forecast' },
+        { name: 'Music Player', icon: '🎵', desc: 'Audio player' },
+        { name: 'Photo Editor', icon: '📸', desc: 'Image editing' },
+        { name: 'Task Manager', icon: '✅', desc: 'Task organization' }
+      ]
+      
+      marketGrid.innerHTML = allApps.map(app => `
+        <div class="market-app">
+          <div class="market-app-icon">${app.icon}</div>
+          <div class="market-app-name">${app.name}</div>
+          <div class="market-app-desc">${app.desc}</div>
+          <button class="market-app-install">Install</button>
+        </div>
+      `).join('')
+    }
+
+    function launchApp(app) {
+      try {
+        const windowManager = window.GlyphOS.getWindowManager()
+        
+        const windowId = windowManager.createWindow({
+          appId: app.id,
+          title: app.name,
+          url: app.url,
+          width: 800,
+          height: 600,
+          x: Math.random() * 200 + 100, // Random position
+          y: Math.random() * 200 + 100
+        })
+        
+        console.log(`${app.name} launched with window ID:`, windowId)
+        renderWindows()
+      } catch (error) {
+        console.error(`Failed to launch ${app.name}:`, error)
+      }
+    }
+
+    // Initialize panels when desktop loads
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loading').style.display = 'none'
+        document.getElementById('desktop').classList.add('loaded')
+        
+        // Populate panels
+        populateAppsPanel()
+        populateMarketPanel()
+      }, 2000)
+    })
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Cmd/Ctrl + Space opens apps panel
+      if ((e.metaKey || e.ctrlKey) && e.key === ' ') {
+        e.preventDefault()
+        openPanel('apps')
+      }
+    })
+  </script>
+</body>
+</html>
