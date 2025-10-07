@@ -907,7 +907,11 @@
   <!-- Main Application -->
   <script type="module" src="/src/index.ts"></script>
   <script type="module">
-    // Time update removed - using new top bar design
+    // Prevent loading in iframe (anti-recursion)
+    if (window.self !== window.top) {
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui;color:#666;">This page cannot be displayed in a frame.</div>';
+      throw new Error('Prevented recursive OS loading in iframe');
+    }
 
     // Show desktop when loaded
     window.addEventListener('load', () => {
@@ -1018,7 +1022,7 @@
             </div>
           </div>
           <div class="window-body">
-            <iframe class="window-content" src="${window.url}" sandbox="allow-scripts allow-forms allow-modals allow-popups" data-window-id="${window.id}"></iframe>
+            <iframe class="window-content" src="${window.url}" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups" data-window-id="${window.id}"></iframe>
           </div>
         `
         
