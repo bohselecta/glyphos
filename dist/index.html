@@ -17,6 +17,30 @@
       color: white;
       height: 100vh;
       overflow: hidden;
+      position: relative;
+    }
+
+    /* Desktop Background - responsive */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('/assets/livingos_comet_desktop_4k_32c-DUfBuEz8.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: -1;
+      opacity: 1;
+    }
+
+    /* Mobile Background - for smaller screens */
+    @media (max-width: 768px) {
+      body::before {
+        background-image: url('/assets/livingos_comet_mobile_1440x3120_32c-wkuOXQkb.png');
+      }
     }
 
     .loading {
@@ -706,7 +730,7 @@
       background: #9333ea;
     }
   </style>
-  <script type="module" crossorigin src="/assets/main-BqqcNcsC.js"></script>
+  <script type="module" crossorigin src="/assets/main-CQ4zuUGT.js"></script>
 </head>
 <body>
   <div id="app">
@@ -864,5 +888,13 @@
     </div>
   </div>
 
+  <!-- SDK - Must load before apps -->
+  
+  <!-- Test Scripts -->
+  <script src="/quick-test.js"></script>
+  <script src="/test-apps.js"></script>
+  <script src="/comprehensive-test.js"></script>
+  
+  <!-- Main Application -->
 </body>
 </html>
