@@ -1009,37 +1009,40 @@
             </div>
           </div>
           <div class="window-body">
-            <iframe class="window-content" src="${window.url}" data-window-id="${window.id}" onload="console.log('Window loaded:', this.src)"></iframe>
+            <iframe class="window-content" src="${window.url}" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups" data-window-id="${window.id}"></iframe>
           </div>
         `
         
-        // CRITICAL: Add to DOM FIRST
+        // Add to DOM
         container.appendChild(windowEl)
-        console.log('Window added to DOM:', windowEl.id)
         
-        // THEN attach event listeners
-        attachWindowControls(windowEl, window.id)
-        
-        // TEST: Add a simple click handler to test if buttons work
+        // Attach event listeners with proper event delegation
         const closeBtn = windowEl.querySelector('.window-btn.close')
+        const minimizeBtn = windowEl.querySelector('.window-btn.minimize')
+        const maximizeBtn = windowEl.querySelector('.window-btn.maximize')
+        
         if (closeBtn) {
-          console.log('Close button found, adding test handler')
-          console.log('Close button element:', closeBtn)
-          console.log('Close button classes:', closeBtn.className)
-          console.log('Close button dataset:', closeBtn.dataset)
-          
           closeBtn.addEventListener('click', (e) => {
             e.stopPropagation()
             e.preventDefault()
-            console.log('TEST: Close button clicked!')
-            console.log('TEST: Event object:', e)
-            console.log('TEST: Calling closeWindow with ID:', window.id)
             closeWindow(window.id)
           })
-          
-          // Button is attached and ready
-        } else {
-          console.log('Close button NOT found!')
+        }
+        
+        if (minimizeBtn) {
+          minimizeBtn.addEventListener('click', (e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            minimizeWindow(window.id)
+          })
+        }
+        
+        if (maximizeBtn) {
+          maximizeBtn.addEventListener('click', (e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            toggleMaximize(window.id)
+          })
         }
         
         // Add focus handling
