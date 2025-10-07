@@ -890,10 +890,19 @@
   <!-- SDK - Must load before apps -->
   <script type="module" src="/sdk/index.ts"></script>
   
-  <!-- Test Scripts -->
-  <script src="/quick-test.js"></script>
-  <script src="/test-apps.js"></script>
-  <script src="/comprehensive-test.js"></script>
+  <!-- Test Scripts (loaded dynamically to avoid build errors) -->
+  <script type="module">
+    // Load test scripts only in development
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      const scripts = ['quick-test.js', 'test-apps.js', 'comprehensive-test.js'];
+      scripts.forEach(src => {
+        const script = document.createElement('script');
+        script.src = `/${src}`;
+        script.onerror = () => console.log(`Test script ${src} not found (OK in production)`);
+        document.body.appendChild(script);
+      });
+    }
+  </script>
   
   <!-- Main Application -->
   <script type="module" src="/src/index.ts"></script>
@@ -1009,7 +1018,7 @@
             </div>
           </div>
           <div class="window-body">
-            <iframe class="window-content" src="${window.url}" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups" data-window-id="${window.id}"></iframe>
+            <iframe class="window-content" src="${window.url}" sandbox="allow-scripts allow-forms allow-modals allow-popups" data-window-id="${window.id}"></iframe>
           </div>
         `
         
