@@ -9,8 +9,19 @@
   <script>
     // Prevent loading in iframe (anti-recursion) - MUST be first script
     if (window.self !== window.top) {
-      document.documentElement.innerHTML = '<html><head><title>Frame Blocked</title></head><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui;color:#666;background:#000;"><div>This page cannot be displayed in a frame.</div></body></html>';
-      throw new Error('Prevented recursive OS loading in iframe');
+      // We're in an iframe — don't boot the OS here.
+      // Fail-safe: replace contents with blank doc.
+      document.open(); 
+      document.write(''); 
+      document.close();
+      
+      // Optionally post a message so the parent knows
+      try { 
+        parent.postMessage({ type: "glyph:prevented-os-embed" }, "*"); 
+      } catch {}
+      
+      // Don't throw error - just silently prevent execution
+      console.warn('Prevented recursive OS loading in iframe');
     }
   </script>
   <style>
@@ -929,7 +940,7 @@
 
     // Window controls are handled directly in renderWindows() - no duplicate handlers
     
-    // THE CLOSE METHOD
+    // THE CLOSE METHOD - Updated for deterministic lifecycle
     function closeWindow(windowId) {
       try {
         console.log('Closing window:', windowId)
@@ -941,22 +952,57 @@
         }
         
         const windowManager = window.GlyphOS.getWindowManager()
-        const success = windowManager.closeWindow(windowId)
-        console.log('Close result:', success)
         
-        if (success) {
-          // Remove from DOM immediately
-          const windowElement = document.querySelector(`[data-window-id="${windowId}"]`)?.closest('.window')
-          if (windowElement) {
-            windowElement.remove()
-            console.log('Window element removed from DOM')
+        // Get the window element and iframe
+        const windowElement = document.querySelector(`[data-window-id="${windowId}"]`)?.closest('.window')
+        const iframe = windowElement?.querySelector('iframe')
+        
+        if (iframe) {
+          // 1) Request app to shutdown gracefully
+          try {
+            iframe.contentWindow?.postMessage({ 
+              type: "app:beforeClose",
+              windowId: windowId 
+            }, "*")
+          } catch (error) {
+            // Cross-origin error is expected
+            console.log("Cross-origin close message (expected)")
           }
           
-          // Don't re-render - we already removed the element
-          // renderWindows() would re-create it
+          // 2) Start closing animation
+          if (windowElement) {
+            windowElement.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out'
+            windowElement.style.opacity = '0'
+            windowElement.style.transform = 'scale(0.95)'
+          }
+          
+          // 3) Hard kill after transition
+          setTimeout(() => {
+            console.log(`Hard killing window ${windowId}`)
+            
+            // Blank and remove iframe
+            iframe.src = "about:blank"
+            iframe.remove()
+            
+            // Remove window element
+            if (windowElement) {
+              windowElement.remove()
+              console.log('Window element removed from DOM')
+            }
+            
+            // Remove from window manager
+            windowManager.closeWindow(windowId)
+            console.log(`Window ${windowId} completely removed`)
+          }, 220)
+        } else {
+          // Fallback: immediate removal
+          if (windowElement) {
+            windowElement.remove()
+          }
+          windowManager.closeWindow(windowId)
         }
         
-        return success
+        return true
       } catch (error) {
         console.error('Error closing window:', error)
         return false
@@ -1030,7 +1076,7 @@
             </div>
           </div>
           <div class="window-body">
-            <iframe class="window-content" src="${window.url}" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups" data-window-id="${window.id}"></iframe>
+            <iframe class="window-content" src="${window.url}" sandbox="allow-scripts allow-downloads allow-forms allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-modals" data-window-id="${window.id}"></iframe>
           </div>
         `
         

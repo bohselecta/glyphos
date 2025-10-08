@@ -161,12 +161,12 @@ export class SandboxRuntime {
     // Set sandbox attributes for security
     const sandboxAttrs = [
       'allow-scripts',           // Allow JavaScript
-      'allow-same-origin',       // Allow same-origin requests
       'allow-forms',            // Allow form submissions
       'allow-popups',           // Allow popups (controlled)
       'allow-modals',           // Allow modals
       'allow-downloads',        // Allow downloads
-      'allow-top-navigation-by-user-activation' // Allow navigation on user activation
+      'allow-pointer-lock',     // Allow pointer lock
+      'allow-popups-to-escape-sandbox' // Allow popups to escape sandbox
     ]
     
     // Add capability-based permissions
