@@ -923,40 +923,19 @@
 
     // Command palette removed - using new panel system
 
-    // Attach window controls - THE KEY METHOD
-    function attachWindowControls(windowElement, windowId) {
-      console.log('Attaching controls to window:', windowId)
-      const buttons = windowElement.querySelectorAll('.window-btn')
-      console.log('Found buttons:', buttons.length)
-      
-      buttons.forEach((button, index) => {
-        console.log(`Attaching listener to button ${index}:`, button.dataset.action)
-        button.addEventListener('click', (e) => {
-          e.stopPropagation() // Prevent window drag
-          e.preventDefault()
-          
-          const action = button.dataset.action
-          console.log(`Window control clicked: ${action} for window ${windowId}`)
-          
-          switch (action) {
-            case 'close':
-              closeWindow(windowId)
-              break
-            case 'minimize':
-              minimizeWindow(windowId)
-              break
-            case 'maximize':
-              toggleMaximize(windowId)
-              break
-          }
-        })
-      })
-    }
+    // Window controls are handled directly in renderWindows() - no duplicate handlers
     
     // THE CLOSE METHOD
     function closeWindow(windowId) {
       try {
         console.log('Closing window:', windowId)
+        
+        // Check if GlyphOS is available
+        if (!window.GlyphOS || !window.GlyphOS.getWindowManager) {
+          console.error('GlyphOS not available yet')
+          return false
+        }
+        
         const windowManager = window.GlyphOS.getWindowManager()
         const success = windowManager.closeWindow(windowId)
         console.log('Close result:', success)
@@ -966,33 +945,58 @@
           const windowElement = document.querySelector(`[data-window-id="${windowId}"]`)?.closest('.window')
           if (windowElement) {
             windowElement.remove()
+            console.log('Window element removed from DOM')
           }
           
           // Re-render to update the window list
           renderWindows()
         }
+        
+        return success
       } catch (error) {
         console.error('Error closing window:', error)
+        return false
       }
     }
     
     function minimizeWindow(windowId) {
       console.log('Minimizing window:', windowId)
+      
+      if (!window.GlyphOS || !window.GlyphOS.getWindowManager) {
+        console.error('GlyphOS not available yet')
+        return false
+      }
+      
       const windowManager = window.GlyphOS.getWindowManager()
       windowManager.minimizeWindow(windowId)
       renderWindows()
+      return true
     }
     
     function toggleMaximize(windowId) {
       console.log('Maximizing window:', windowId)
+      
+      if (!window.GlyphOS || !window.GlyphOS.getWindowManager) {
+        console.error('GlyphOS not available yet')
+        return false
+      }
+      
       const windowManager = window.GlyphOS.getWindowManager()
       windowManager.maximizeWindow(windowId)
       renderWindows()
+      return true
     }
 
     // Window rendering functions
     function renderWindows() {
       const container = document.getElementById('windows-container')
+      
+      // Check if GlyphOS is available
+      if (!window.GlyphOS || !window.GlyphOS.getWindowManager) {
+        console.log('GlyphOS not available yet, skipping window render')
+        return
+      }
+      
       const windowManager = window.GlyphOS.getWindowManager()
       const windows = windowManager.getWindows()
       
@@ -1028,16 +1032,21 @@
         
         // Add to DOM
         container.appendChild(windowEl)
+        console.log('Window added to DOM:', window.id)
         
-        // Attach event listeners with proper event delegation
+        // Attach window control event listeners directly
         const closeBtn = windowEl.querySelector('.window-btn.close')
         const minimizeBtn = windowEl.querySelector('.window-btn.minimize')
         const maximizeBtn = windowEl.querySelector('.window-btn.maximize')
+        
+        console.log('Attaching controls to window:', window.id)
+        console.log('Found buttons:', { close: !!closeBtn, minimize: !!minimizeBtn, maximize: !!maximizeBtn })
         
         if (closeBtn) {
           closeBtn.addEventListener('click', (e) => {
             e.stopPropagation()
             e.preventDefault()
+            console.log('Close button clicked for window:', window.id)
             closeWindow(window.id)
           })
         }
@@ -1046,6 +1055,7 @@
           minimizeBtn.addEventListener('click', (e) => {
             e.stopPropagation()
             e.preventDefault()
+            console.log('Minimize button clicked for window:', window.id)
             minimizeWindow(window.id)
           })
         }
@@ -1054,6 +1064,7 @@
           maximizeBtn.addEventListener('click', (e) => {
             e.stopPropagation()
             e.preventDefault()
+            console.log('Maximize button clicked for window:', window.id)
             toggleMaximize(window.id)
           })
         }
@@ -1295,6 +1306,14 @@
 
     function launchApp(app) {
       try {
+        console.log('Launching app:', app.name)
+        
+        // Check if GlyphOS is available
+        if (!window.GlyphOS || !window.GlyphOS.getWindowManager) {
+          console.error('GlyphOS not available yet, cannot launch app')
+          return false
+        }
+        
         const windowManager = window.GlyphOS.getWindowManager()
         
         const windowId = windowManager.createWindow({
@@ -1309,8 +1328,10 @@
         
         console.log(`${app.name} launched with window ID:`, windowId)
         renderWindows()
+        return true
       } catch (error) {
         console.error(`Failed to launch ${app.name}:`, error)
+        return false
       }
     }
 
