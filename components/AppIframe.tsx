@@ -44,7 +44,10 @@ export const AppIframe = forwardRef<HTMLIFrameElement, AppIframeProps>(
       }
       
       // Validate that it's not pointing to the OS root
-      if (url === window.location.href || url.endsWith('/index.html') || url.endsWith('/')) {
+      if (url === window.location.href || 
+          url === window.location.origin + '/index.html' ||
+          url === window.location.origin + '/' ||
+          (url.endsWith('/index.html') && !url.includes('/apps/'))) {
         console.error(`App ${appId} entry URL points to OS root: ${url}`);
         return "about:blank";
       }
@@ -166,7 +169,10 @@ export function resolveAppEntryUrl(appId: string): string {
   }
   
   // Validate that it's not pointing to the OS root
-  if (url === window.location.href || url.endsWith('/index.html') || url.endsWith('/')) {
+  if (url === window.location.href || 
+      url === window.location.origin + '/index.html' ||
+      url === window.location.origin + '/' ||
+      (url.endsWith('/index.html') && !url.includes('/apps/'))) {
     console.error(`App ${appId} entry URL points to OS root: ${url}`);
     return "about:blank";
   }

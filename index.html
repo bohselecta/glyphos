@@ -1380,7 +1380,10 @@
         }
         
         // Validate URL doesn't point to OS root
-        if (entryUrl === window.location.href || entryUrl.endsWith('/index.html') || entryUrl.endsWith('/')) {
+        if (entryUrl === window.location.href || 
+            entryUrl === window.location.origin + '/index.html' ||
+            entryUrl === window.location.origin + '/' ||
+            entryUrl.endsWith('/index.html') && !entryUrl.includes('/apps/')) {
           console.error(`App ${app.id} entry URL points to OS root: ${entryUrl}`)
           return false
         }
