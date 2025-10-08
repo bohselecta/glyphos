@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GlyphOS</title>
+  
+  <!-- CRITICAL: Frame-busting protection - must be FIRST -->
+  <script>
+    // Prevent loading in iframe (anti-recursion) - MUST be first script
+    if (window.self !== window.top) {
+      document.documentElement.innerHTML = '<html><head><title>Frame Blocked</title>  <script type="module" crossorigin src="/assets/main-BGJ2tMBG.js"></script>
+</head><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui;color:#666;background:#000;"><div>This page cannot be displayed in a frame.</div></body></html>';
+      throw new Error('Prevented recursive OS loading in iframe');
+    }
+  </script>
   <style>
     * {
       margin: 0;
@@ -730,7 +740,6 @@
       background: #9333ea;
     }
   </style>
-  <script type="module" crossorigin src="/assets/main-D4fK5qtU.js"></script>
 </head>
 <body>
   <div id="app">

@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GlyphOS</title>
+  
+  <!-- CRITICAL: Frame-busting protection - must be FIRST -->
+  <script>
+    // Prevent loading in iframe (anti-recursion) - MUST be first script
+    if (window.self !== window.top) {
+      document.documentElement.innerHTML = '<html><head><title>Frame Blocked</title></head><body style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui;color:#666;background:#000;"><div>This page cannot be displayed in a frame.</div></body></html>';
+      throw new Error('Prevented recursive OS loading in iframe');
+    }
+  </script>
   <style>
     * {
       margin: 0;
@@ -907,11 +916,6 @@
   <!-- Main Application -->
   <script type="module" src="/src/index.ts"></script>
   <script type="module">
-    // Prevent loading in iframe (anti-recursion)
-    if (window.self !== window.top) {
-      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui;color:#666;">This page cannot be displayed in a frame.</div>';
-      throw new Error('Prevented recursive OS loading in iframe');
-    }
 
     // Show desktop when loaded
     window.addEventListener('load', () => {
@@ -948,8 +952,8 @@
             console.log('Window element removed from DOM')
           }
           
-          // Re-render to update the window list
-          renderWindows()
+          // Don't re-render - we already removed the element
+          // renderWindows() would re-create it
         }
         
         return success
