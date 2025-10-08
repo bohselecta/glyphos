@@ -1364,12 +1364,33 @@
           return false
         }
         
+        // Check if app registry is available
+        if (!window.__APP_REGISTRY__ || !window.__APP_REGISTRY__[app.id]) {
+          console.error(`App ${app.id} not found in registry`)
+          return false
+        }
+        
         const windowManager = window.GlyphOS.getWindowManager()
+        const appManifest = window.__APP_REGISTRY__[app.id]
+        
+        // Resolve the entry URL properly
+        let entryUrl = appManifest.entry?.html || app.url
+        if (!entryUrl.startsWith('http')) {
+          entryUrl = `${window.location.origin}${entryUrl.startsWith('/') ? '' : '/'}${entryUrl}`
+        }
+        
+        // Validate URL doesn't point to OS root
+        if (entryUrl === window.location.href || entryUrl.endsWith('/index.html') || entryUrl.endsWith('/')) {
+          console.error(`App ${app.id} entry URL points to OS root: ${entryUrl}`)
+          return false
+        }
+        
+        console.log(`Launching ${app.name} from: ${entryUrl}`)
         
         const windowId = windowManager.createWindow({
           appId: app.id,
           title: app.name,
-          url: app.url,
+          url: entryUrl,
           width: 800,
           height: 600,
           x: Math.random() * 200 + 100, // Random position
@@ -1385,11 +1406,182 @@
       }
     }
 
+    // Initialize app registry
+    function initializeAppRegistry() {
+      window.__APP_REGISTRY__ = {
+        'com.glyphd.notes': {
+          id: 'com.glyphd.notes',
+          manifest: {
+            name: 'Notes',
+            shortName: 'Notes',
+            description: 'Simple, fast note-taking with automatic saving',
+            categories: ['productivity', 'utility'],
+            icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml' }],
+            display: 'standalone',
+            themeColor: '#3b82f6',
+            backgroundColor: '#0f172a'
+          },
+          entry: {
+            html: '/apps/notes/index.html'
+          }
+        },
+        'com.glyphd.canvas': {
+          id: 'com.glyphd.canvas',
+          manifest: {
+            name: 'Glyph Canvas',
+            shortName: 'Canvas',
+            description: 'Creative drawing app',
+            categories: ['creative'],
+            icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml' }],
+            display: 'standalone',
+            themeColor: '#8b5cf6',
+            backgroundColor: '#0f172a'
+          },
+          entry: {
+            html: '/apps/canvas/index.html'
+          }
+        },
+        'com.glyphd.collab': {
+          id: 'com.glyphd.collab',
+          manifest: {
+            name: 'Live Collab',
+            shortName: 'Collab',
+            description: 'Real-time collaboration',
+            categories: ['productivity'],
+            icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml' }],
+            display: 'standalone',
+            themeColor: '#10b981',
+            backgroundColor: '#0f172a'
+          },
+          entry: {
+            html: '/apps/collab/index.html'
+          }
+        },
+        'com.glyphd.aichat': {
+          id: 'com.glyphd.aichat',
+          manifest: {
+            name: 'AI Chat',
+            shortName: 'AI Chat',
+            description: 'Chat with AI',
+            categories: ['ai'],
+            icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml' }],
+            display: 'standalone',
+            themeColor: '#f59e0b',
+            backgroundColor: '#0f172a'
+          },
+          entry: {
+            html: '/apps/aichat/index.html'
+          }
+        },
+        'com.glyphd.monitor': {
+          id: 'com.glyphd.monitor',
+          manifest: {
+            name: 'System Monitor',
+            shortName: 'Monitor',
+            description: 'System performance monitor',
+            categories: ['tools'],
+            icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml' }],
+            display: 'standalone',
+            themeColor: '#ef4444',
+            backgroundColor: '#0f172a'
+          },
+          entry: {
+            html: '/apps/monitor/index.html'
+          }
+        },
+        'com.glyphd.command': {
+          id: 'com.glyphd.command',
+          manifest: {
+            name: 'Command Center',
+            shortName: 'Command',
+            description: 'App launcher and workflows',
+            categories: ['tools'],
+            icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml' }],
+            display: 'standalone',
+            themeColor: '#06b6d4',
+            backgroundColor: '#0f172a'
+          },
+          entry: {
+            html: '/apps/command/index.html'
+          }
+        },
+        'com.glyphd.memory': {
+          id: 'com.glyphd.memory',
+          manifest: {
+            name: 'Memory Graph',
+            shortName: 'Memory',
+            description: 'Knowledge graph visualization',
+            categories: ['ai'],
+            icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml' }],
+            display: 'standalone',
+            themeColor: '#84cc16',
+            backgroundColor: '#0f172a'
+          },
+          entry: {
+            html: '/apps/memory/index.html'
+          }
+        },
+        'com.glyphd.focus': {
+          id: 'com.glyphd.focus',
+          manifest: {
+            name: 'Focus',
+            shortName: 'Focus',
+            description: 'Temporal flow management with productivity rituals',
+            categories: ['productivity'],
+            icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml' }],
+            display: 'minimal-ui',
+            themeColor: '#10b981',
+            backgroundColor: '#0f172a'
+          },
+          entry: {
+            html: '/apps/focus/index.html'
+          }
+        },
+        'com.glyphd.market': {
+          id: 'com.glyphd.market',
+          manifest: {
+            name: 'App Market',
+            shortName: 'Market',
+            description: 'Discover and install apps',
+            categories: ['tools'],
+            icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml' }],
+            display: 'standalone',
+            themeColor: '#f97316',
+            backgroundColor: '#0f172a'
+          },
+          entry: {
+            html: '/apps/market/index.html'
+          }
+        },
+        'com.glyphd.studio': {
+          id: 'com.glyphd.studio',
+          manifest: {
+            name: 'Glyph Studio',
+            shortName: 'Studio',
+            description: 'Creative workspace',
+            categories: ['creative'],
+            icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml' }],
+            display: 'standalone',
+            themeColor: '#ec4899',
+            backgroundColor: '#0f172a'
+          },
+          entry: {
+            html: '/apps/studio/index.html'
+          }
+        }
+      };
+      
+      console.log('✅ App registry initialized with', Object.keys(window.__APP_REGISTRY__).length, 'apps');
+    }
+
     // Initialize panels when desktop loads
     window.addEventListener('load', () => {
       setTimeout(() => {
         document.getElementById('loading').style.display = 'none'
         document.getElementById('desktop').classList.add('loaded')
+        
+        // Initialize app registry first
+        initializeAppRegistry()
         
         // Populate panels
         populateAppsPanel()

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Notes</title>
+  <base href="/apps/notes/">
   <style>
     * {
       margin: 0;
@@ -180,6 +181,34 @@
   <script type="module">
     // Notes App - GlyphOS
     
+    // Handshake with parent OS
+    function handshakeWithOS() {
+      console.log('Notes app: Sending handshake to OS');
+      try {
+        window.parent.postMessage({ type: 'glyph:hello' }, '*');
+      } catch (error) {
+        console.log('Notes app: Cross-origin handshake (expected)');
+      }
+    }
+    
+    // Listen for OS messages
+    window.addEventListener('message', (event) => {
+      if (event.data?.type === 'glyph:hello:ack') {
+        console.log('Notes app: Handshake acknowledged by OS', event.data);
+      }
+      
+      if (event.data?.type === 'app:beforeClose') {
+        console.log('Notes app: OS requested close');
+        // Save any pending changes before closing
+        if (window.saveNote) {
+          window.saveNote();
+        }
+      }
+    });
+    
+    // Send handshake when app loads
+    setTimeout(handshakeWithOS, 100);
+    
     // Mock OS API for now - will be injected by GlyphOS later
     const OS = {
       storage: {
@@ -330,6 +359,9 @@
         await loadNotes()
       }, 500)
     }
+    
+    // Expose saveNote globally for OS to call
+    window.saveNote = saveNote;
     
     // Delete current note
     async function deleteNote() {
