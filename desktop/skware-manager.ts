@@ -4,7 +4,6 @@
  * (SKWARE = window container for apps in GlyphOS)
  */
 
-import type { WindowState } from '../types/desktop'
 import { BSPLayout, GridLayout, CascadeLayout, AdaptiveLayout, MasterStackLayout } from '../algorithms/layout/window-layout'
 
 export type SKWAREID = string
