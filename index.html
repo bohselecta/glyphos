@@ -1064,33 +1064,33 @@
         }
       })
       
-      windows.forEach(window => {
+      windows.forEach(skware => {
         // Skip if already rendered
-        if (document.getElementById(window.id)) {
-          console.log('Window already rendered:', window.id)
+        if (document.getElementById(skware.id)) {
+          console.log('SKWARE already rendered:', skware.id)
           return
         }
         
-        console.log('Rendering NEW window:', window.id, window.title, 'URL:', window.url)
+        console.log('Rendering NEW SKWARE:', skware.id, skware.title, 'URL:', skware.url)
         
         // Validate URL before rendering
-        if (!window.url || window.url === '' || window.url === window.location.href) {
-          console.error('INVALID URL for window:', window.id, 'URL:', window.url)
+        if (!skware.url || skware.url === '' || skware.url === window.location.href) {
+          console.error('INVALID URL for SKWARE:', skware.id, 'URL:', skware.url)
           return
         }
         
         const windowEl = document.createElement('div')
-        windowEl.className = `window ${window.focused ? 'focused' : ''}`
-        windowEl.id = window.id // Set the ID
-        windowEl.style.left = `${window.bounds.x}px`
-        windowEl.style.top = `${window.bounds.y}px`
-        windowEl.style.width = `${window.bounds.width}px`
-        windowEl.style.height = `${window.bounds.height}px`
-        windowEl.style.zIndex = window.zIndex
+        windowEl.className = `window ${skware.focused ? 'focused' : ''}`
+        windowEl.id = skware.id // Set the ID
+        windowEl.style.left = `${skware.bounds.x}px`
+        windowEl.style.top = `${skware.bounds.y}px`
+        windowEl.style.width = `${skware.bounds.width}px`
+        windowEl.style.height = `${skware.bounds.height}px`
+        windowEl.style.zIndex = skware.zIndex
         
         windowEl.innerHTML = `
-          <div class="window-header" data-window-id="${window.id}">
-            <div class="window-title">${window.title}</div>
+          <div class="window-header" data-window-id="${skware.id}">
+            <div class="window-title">${skware.title}</div>
             <div class="window-controls">
               <button class="window-btn minimize" data-action="minimize">−</button>
               <button class="window-btn maximize" data-action="maximize">□</button>
@@ -1098,28 +1098,28 @@
             </div>
           </div>
           <div class="window-body">
-            <iframe class="window-content" src="${window.url}" sandbox="allow-scripts allow-downloads allow-forms allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-modals" data-window-id="${window.id}"></iframe>
+            <iframe class="window-content" src="${skware.url}" sandbox="allow-scripts allow-downloads allow-forms allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-modals" data-window-id="${skware.id}"></iframe>
           </div>
         `
         
         // Add to DOM
         container.appendChild(windowEl)
-        console.log('Window added to DOM:', window.id)
+        console.log('SKWARE added to DOM:', skware.id)
         
         // Attach window control event listeners directly
         const closeBtn = windowEl.querySelector('.window-btn.close')
         const minimizeBtn = windowEl.querySelector('.window-btn.minimize')
         const maximizeBtn = windowEl.querySelector('.window-btn.maximize')
         
-        console.log('Attaching controls to window:', window.id)
+        console.log('Attaching controls to SKWARE:', skware.id)
         console.log('Found buttons:', { close: !!closeBtn, minimize: !!minimizeBtn, maximize: !!maximizeBtn })
         
         if (closeBtn) {
           closeBtn.addEventListener('click', (e) => {
             e.stopPropagation()
             e.preventDefault()
-            console.log('Close button clicked for window:', window.id)
-            closeWindow(window.id)
+            console.log('Close button clicked for SKWARE:', skware.id)
+            closeWindow(skware.id)
           })
         }
         
@@ -1127,8 +1127,8 @@
           minimizeBtn.addEventListener('click', (e) => {
             e.stopPropagation()
             e.preventDefault()
-            console.log('Minimize button clicked for window:', window.id)
-            minimizeWindow(window.id)
+            console.log('Minimize button clicked for SKWARE:', skware.id)
+            minimizeWindow(skware.id)
           })
         }
         
@@ -1136,14 +1136,14 @@
           maximizeBtn.addEventListener('click', (e) => {
             e.stopPropagation()
             e.preventDefault()
-            console.log('Maximize button clicked for window:', window.id)
-            toggleMaximize(window.id)
+            console.log('Maximize button clicked for SKWARE:', skware.id)
+            toggleMaximize(skware.id)
           })
         }
         
         // Add focus handling
         windowEl.addEventListener('mousedown', () => {
-          windowManager.focusWindow(window.id)
+          windowManager.focusWindow(skware.id)
           renderWindows()
         })
       })
