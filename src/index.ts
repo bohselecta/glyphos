@@ -5,7 +5,7 @@
 import { initializeKernel } from '../kernel/core.js'
 import { KernelStorageManager } from '../runtime/storage/manager.js'
 import { RuntimeManager } from '../runtime/index.js'
-import { WindowManager, CommandPalette, Dock } from '../desktop/index.js'
+import { WindowManager, SKWAREManager, CommandPalette, Dock } from '../desktop/index.js'
 import { TrustScoreCache, SearchEngine } from '../algorithms/index.js'
 
 // Global instances
@@ -13,6 +13,7 @@ let kernel: any = null
 let storage: KernelStorageManager | null = null
 let runtime: RuntimeManager | null = null
 let windowManager: WindowManager | null = null
+let skwareManager: SKWAREManager | null = null
 let commandPalette: CommandPalette | null = null
 let dock: Dock | null = null
 let trustCache: TrustScoreCache | null = null
@@ -44,7 +45,8 @@ async function initializeGlyphOS(): Promise<void> {
     console.log('✅ Runtime manager initialized')
     
     // Initialize desktop environment
-    windowManager = new WindowManager()
+    windowManager = new WindowManager() // Legacy support
+    skwareManager = new SKWAREManager() // New SKWARE system
     commandPalette = new CommandPalette()
     dock = new Dock()
     
@@ -229,6 +231,16 @@ export function getWindowManager() {
 }
 
 /**
+ * Get SKWARE manager instance
+ */
+export function getSKWAREManager() {
+  if (!skwareManager) {
+    throw new Error('SKWARE manager not initialized')
+  }
+  return skwareManager
+}
+
+/**
  * Get command palette instance
  */
 export function getCommandPalette() {
@@ -272,7 +284,7 @@ export function getSearchEngine() {
  * Check if GlyphOS is initialized
  */
 export function isInitialized(): boolean {
-  return kernel !== null && storage !== null && windowManager !== null
+  return kernel !== null && storage !== null && windowManager !== null && skwareManager !== null
 }
 
 // Initialize when DOM is ready
@@ -290,6 +302,7 @@ declare global {
       getStorage: typeof getStorage
       getRuntime: typeof getRuntime
       getWindowManager: typeof getWindowManager
+      getSKWAREManager: typeof getSKWAREManager
       getCommandPalette: typeof getCommandPalette
       getDock: typeof getDock
       getTrustCache: typeof getTrustCache
@@ -304,6 +317,7 @@ window.GlyphOS = {
   getStorage,
   getRuntime,
   getWindowManager,
+  getSKWAREManager,
   getCommandPalette,
   getDock,
   getTrustCache,

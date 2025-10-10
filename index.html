@@ -279,8 +279,8 @@
       margin: 0 0.5rem;
     }
 
-    /* Windows */
-    .window {
+    /* SKWAREs (App Containers) */
+    .window, .skware {
       position: absolute;
       background: rgba(255, 255, 255, 0.98);
       -webkit-backdrop-filter: blur(40px);
@@ -795,8 +795,9 @@
     </div>
 
     <div class="desktop" id="desktop">
-      <!-- Windows Container -->
+      <!-- SKWAREs Container (App Windows) -->
       <div id="windows-container"></div>
+      <div id="skwares-container"></div>
     </div>
 
     <!-- Bottom Dock -->
@@ -1052,11 +1053,32 @@
       
       console.log('Rendering windows:', windows.length, 'windows')
       console.log('Window IDs:', windows.map(w => w.id))
+      console.log('Window URLs:', windows.map(w => ({ id: w.id, url: w.url })))
       
-      container.innerHTML = ''
+      // CRITICAL FIX: Don't destroy all iframes - only remove windows that no longer exist
+      const existingIds = new Set(windows.map(w => w.id))
+      Array.from(container.children).forEach(el => {
+        if (!existingIds.has(el.id)) {
+          console.log('Removing stale window:', el.id)
+          el.remove()
+        }
+      })
       
       windows.forEach(window => {
-        console.log('Rendering window:', window.id, window.title)
+        // Skip if already rendered
+        if (document.getElementById(window.id)) {
+          console.log('Window already rendered:', window.id)
+          return
+        }
+        
+        console.log('Rendering NEW window:', window.id, window.title, 'URL:', window.url)
+        
+        // Validate URL before rendering
+        if (!window.url || window.url === '' || window.url === window.location.href) {
+          console.error('INVALID URL for window:', window.id, 'URL:', window.url)
+          return
+        }
+        
         const windowEl = document.createElement('div')
         windowEl.className = `window ${window.focused ? 'focused' : ''}`
         windowEl.id = window.id // Set the ID
@@ -1388,7 +1410,9 @@
           return false
         }
         
-        console.log(`Launching ${app.name} from: ${entryUrl}`)
+        console.log(`✅ Launching ${app.name} from: ${entryUrl}`)
+        console.log(`   App ID: ${app.id}`)
+        console.log(`   Entry URL validated: ${entryUrl}`)
         
         const windowId = windowManager.createWindow({
           appId: app.id,
@@ -1400,7 +1424,8 @@
           y: Math.random() * 200 + 100
         })
         
-        console.log(`${app.name} launched with window ID:`, windowId)
+        console.log(`✅ ${app.name} launched with window ID:`, windowId)
+        console.log(`   Now calling renderWindows()`)
         renderWindows()
         return true
       } catch (error) {

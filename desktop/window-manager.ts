@@ -61,6 +61,7 @@ export class WindowManager {
       zIndex: this.windows.size + 1
     }
     
+    console.log(`WindowManager: Creating window ${windowId} with URL:`, options.url)
     this.windows.set(windowId, window)
     this.focusWindow(windowId)
     
